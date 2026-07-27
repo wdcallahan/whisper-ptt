@@ -3,6 +3,7 @@ from __future__ import annotations
 import signal
 import subprocess
 import time
+import wave
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Callable
@@ -87,7 +88,9 @@ class PipeWireRecorder:
 
     def stop(self, recording: Recording) -> Path:
         process = recording.process
+        sent_interrupt = False
         if process.poll() is None:
+            sent_interrupt = True
             process.send_signal(signal.SIGINT)
             try:
                 process.wait(timeout=self.config.stop_timeout_seconds)
@@ -101,17 +104,62 @@ class PipeWireRecorder:
         recording.stderr_stream.close()
 
         return_code = process.returncode
-        if return_code not in (0, -signal.SIGINT, 128 + signal.SIGINT):
+        accepted_return = return_code in (
+            0,
+            -signal.SIGINT,
+            128 + signal.SIGINT,
+        ) or (sent_interrupt and return_code == 1)
+        if not accepted_return:
             raise RecorderError(
                 f"pw-record exited with status {return_code}; "
                 f"see {recording.stderr_path}"
             )
-        if not recording.audio_path.is_file() or recording.audio_path.stat().st_size <= 44:
+        self._validate_wav(recording)
+        return recording.audio_path
+
+    def _validate_wav(self, recording: Recording) -> None:
+        path = recording.audio_path
+        if not path.is_file() or path.stat().st_size <= 44:
             raise RecorderError(
                 f"pw-record did not create a nonempty WAV file; "
                 f"see {recording.stderr_path}"
             )
-        return recording.audio_path
+        try:
+            with wave.open(str(path), "rb") as audio:
+                channels = audio.getnchannels()
+                rate = audio.getframerate()
+                sample_width = audio.getsampwidth()
+                frame_count = audio.getnframes()
+                compression = audio.getcomptype()
+                payload = audio.readframes(frame_count)
+        except (EOFError, OSError, wave.Error) as error:
+            raise RecorderError(
+                f"pw-record created an invalid WAV file: {error}; "
+                f"see {recording.stderr_path}"
+            ) from error
+
+        expected_payload = frame_count * channels * sample_width
+        problems: list[str] = []
+        if channels != self.config.channels:
+            problems.append(f"channels={channels}")
+        if rate != self.config.rate:
+            problems.append(f"rate={rate}")
+        if sample_width != 2:
+            problems.append(f"sample_width={sample_width}")
+        if compression != "NONE":
+            problems.append(f"compression={compression}")
+        if frame_count <= 0:
+            problems.append("frames=0")
+        if len(payload) != expected_payload:
+            problems.append(
+                f"payload_bytes={len(payload)} expected={expected_payload}"
+            )
+        if problems:
+            raise RecorderError(
+                "pw-record created a WAV outside the accepted "
+                f"16 kHz mono signed-16 path ({', '.join(problems)}); "
+                f"see {recording.stderr_path}"
+            )
 
     def abort(self, recording: Recording) -> None:
         try:

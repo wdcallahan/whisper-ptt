@@ -123,6 +123,10 @@ Successful directories are removed unless
 - The evdev listener remains responsive while inference runs in one worker.
 - State and the active recorder are protected by a reentrant lock.
 - A second press never queues hidden work.
+- MACE's PipeWire 1.6.8 `pw-record` returns status 1 after the intentional
+  `SIGINT` used to finalize capture. That status is accepted only when this
+  process sent the interrupt and the resulting WAV validates as complete
+  16 kHz mono signed-16 PCM. A spontaneous status 1 remains an error.
 - systemd `SIGTERM` stops an active recorder, prevents subsequent injection,
   waits briefly for a worker, and leaves diagnostics.
 - Five failed startup attempts within 30 seconds trip systemd's start limit
