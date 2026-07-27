@@ -152,9 +152,15 @@ Focus a harmless text field in another window, hold Whisper while speaking one
 sentence, and release it. Confirm Recording, Transcribing, and Ready
 notifications replace one another, and the sentence appears once.
 
-Change focus immediately after a second release. Expected: nothing is inserted
-in either window and the error notification says focus changed. Return to the
-daemon terminal and stop it with Control-C.
+For a reliable pre-injection rejection, begin another recording in the text
+editor, change focus while still holding Whisper, and then release. Expected:
+nothing is inserted and the error notification says focus changed.
+
+For the post-injection audit, dictate a longer sentence and deliberately change
+focus after the first characters appear. Some text can follow focus because
+`ydotool` is not target-bound. Expected: the daemon finishes in Error and the
+attention notification says that already emitted text may have been split
+across windows. Return to the daemon terminal and stop it with Control-C.
 
 Inspect retained diagnostics:
 

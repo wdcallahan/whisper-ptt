@@ -96,9 +96,17 @@ MACE already runs `window-calls@domandoman.xyz`, which exposes Mutter's focused
 window ID over the user D-Bus.
 
 Version 0.1 records that ID at press and compares it immediately before
-injection. A mismatch is an error. It never pulls focus back and never guesses
-where text should go. The retained `transcript.raw.txt` and `transcript.txt`
-make the result recoverable.
+injection. A mismatch at that point is an error and emits no text. It compares
+the ID again after `ydotool` finishes. A post-injection mismatch becomes an
+attention-required error, records the emitted character count, and warns that
+text may have been split across windows.
+
+The second comparison is an audit, not target locking: `ydotool` emits a stream
+of ordinary synthetic key events to whichever Wayland surface is focused at
+each moment. Already emitted characters cannot be recalled. Nova normally
+watches the cursor while dictating, and no Enter or other submission key is
+ever synthesized. The retained `transcript.raw.txt` and `transcript.txt` make
+the result recoverable.
 
 This dependency is checked before activation. Replacing it with a narrow
 Nova-owned focus broker is a possible later hardening step, not a prerequisite

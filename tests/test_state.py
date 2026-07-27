@@ -44,3 +44,27 @@ class StateTests(unittest.TestCase):
             self.assertFalse(
                 publisher.state_path.with_suffix(".json.tmp").exists()
             )
+
+    def test_error_notification_requests_attention_without_claiming_safety(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            calls = []
+
+            def runner(command, **kwargs):
+                calls.append((command, kwargs))
+                return subprocess.CompletedProcess(command, 0, b"42\n", b"")
+
+            publisher = StatePublisher(
+                RuntimeConfig(
+                    state_dir=root / "state",
+                    runtime_dir=root / "runtime",
+                ),
+                FeedbackConfig(),
+                runner=runner,
+            )
+            publisher.publish(State.ERROR, "Text may span two windows.")
+
+            self.assertIn("Nova Whisper: attention required", calls[0][0])
+            self.assertNotIn("Nova Whisper stopped safely", calls[0][0])

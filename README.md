@@ -48,13 +48,13 @@ passed there.
 | Key repeat | Linux repeat events are ignored. |
 | Lost release | Device loss aborts capture; a 180-second ceiling stops an orphaned recording. |
 | Overlapping inference | A press while busy is rejected visibly. |
-| Focus changes | Text is not injected if the focused GNOME window changed after press. |
+| Focus changes | A mismatch before injection blocks all typing. A second check after `ydotool` finishes detects and warns when text may have followed focus across windows; emitted characters cannot be recalled. |
 | Empty/short audio | Nothing is injected. |
 | Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |
 | Unicode ambiguity | The first proof maps common smart punctuation to ASCII and rejects all remaining non-ASCII text. |
 | Damaged model | Startup verifies the official `base.en` byte count and SHA-256 before loading it. |
 | Shell interpretation | Transcript bytes go to `ydotool type --file=- --escape=0` over standard input; no shell evaluates them. |
-| Failure | Nothing is injected; WAV, raw transcript when available, normalized transcript when available, and failure details are retained. |
+| Failure | Failures before injection emit nothing. A detected post-injection focus change may have emitted text; it raises an attention notification and retains WAV, transcripts, and failure details. |
 
 Successful audio is removed by default. Aggregate timing metrics contain no
 transcript text.

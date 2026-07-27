@@ -91,7 +91,7 @@ class StatePublisher:
             )
         elif snapshot.state == State.ERROR:
             self._notify(
-                "Nova Whisper stopped safely",
+                "Nova Whisper: attention required",
                 snapshot.detail,
                 "dialog-error-symbolic",
                 8000,

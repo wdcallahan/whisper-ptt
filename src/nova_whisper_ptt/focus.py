@@ -99,7 +99,7 @@ class WindowCallsFocusGuard:
         current = self.capture()
         if current.window_id != original.window_id:
             raise FocusError(
-                "focused window changed while transcribing "
+                "focused window changed since recording began "
                 f"(was {original.window_id} {original.wm_class!r}, "
                 f"now {current.window_id} {current.wm_class!r})"
             )

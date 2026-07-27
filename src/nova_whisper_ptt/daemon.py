@@ -212,6 +212,23 @@ class PushToTalkController:
                     raise FocusError("no original focused-window token was captured")
                 self.focus_guard.require_same(focus)
             result = self.injector.inject(normalized)
+            if self.config.focus.require_unchanged:
+                assert focus is not None
+                try:
+                    self.focus_guard.require_same(focus)
+                except FocusError as error:
+                    self._record_metric(
+                        "focus-changed-after-injection",
+                        recording_ms,
+                        time.monotonic() - released_at,
+                        result.character_count,
+                    )
+                    raise FocusError(
+                        "focused window differed after text injection; "
+                        f"{result.character_count} characters were already "
+                        "emitted and may have been split across windows "
+                        f"({error})"
+                    ) from error
             self._record_metric(
                 "inserted",
                 recording_ms,

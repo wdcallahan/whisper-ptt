@@ -67,14 +67,16 @@ class FakeInjector:
 
 
 class FakeFocus:
-    def __init__(self, changed=False) -> None:
-        self.changed = changed
+    def __init__(self, changed_checks=()) -> None:
+        self.changed_checks = set(changed_checks)
+        self.check_count = 0
 
     def capture(self):
         return FocusToken(42, "org.gnome.Ptyxis")
 
     def require_same(self, original):
-        if self.changed:
+        self.check_count += 1
+        if self.check_count in self.changed_checks:
             raise FocusError("focused window changed during proof")
 
 
@@ -168,7 +170,7 @@ class ControllerTests(unittest.TestCase):
                 FakeRecorder(),
                 FakeTranscriber(),
                 injector,
-                FakeFocus(changed=True),
+                FakeFocus(changed_checks=(1,)),
                 publisher,
                 timer_factory=FakeTimer,
             )
@@ -184,3 +186,35 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue((utterances[0] / "transcript.raw.txt").is_file())
             self.assertTrue((utterances[0] / "transcript.txt").is_file())
             self.assertTrue((utterances[0] / "failure.txt").is_file())
+
+    def test_focus_change_after_injection_warns_and_preserves_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            publisher = FakePublisher()
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                make_config(root),
+                FakeRecorder(),
+                FakeTranscriber(),
+                injector,
+                FakeFocus(changed_checks=(2,)),
+                publisher,
+                timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            with self.assertLogs("nova_whisper_ptt.daemon", level="ERROR"):
+                controller.release()
+                self._wait_for(controller, State.ERROR)
+
+            self.assertEqual(injector.texts, ["hello world "])
+            utterances = list((root / "state" / "utterances").iterdir())
+            self.assertEqual(len(utterances), 1)
+            failure = (utterances[0] / "failure.txt").read_text(encoding="utf-8")
+            self.assertIn("already emitted", failure)
+            self.assertIn("may have been split across windows", failure)
+            metrics = (root / "state" / "metrics.jsonl").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn('"outcome": "focus-changed-after-injection"', metrics)
+            self.assertIn('"character_count": 12', metrics)
