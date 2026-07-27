@@ -39,6 +39,10 @@ class DeploymentAssetTests(unittest.TestCase):
             template = template.replace(source, destination)
         self.assertNotIn("{{", template)
         config = tomllib.loads(template)
+        self.assertEqual(
+            config["input"]["device_globs"],
+            ["/dev/input/by-id/usb-Keychron_Lemokey_X2-event-if01"],
+        )
         self.assertEqual(config["audio"]["source"], "alsa_input.approved")
         self.assertEqual(config["whisper"]["expected_size_bytes"], 147_964_211)
         self.assertFalse(config["runtime"]["retain_successful_audio"])

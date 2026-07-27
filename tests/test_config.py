@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nova_whisper_ptt.config import ConfigError, load_config
+from nova_whisper_ptt.config import ConfigError, InputConfig, load_config
 
 
 CONFIG = """
@@ -37,6 +37,12 @@ runtime_dir = "{runtime}"
 
 
 class ConfigTests(unittest.TestCase):
+    def test_default_input_path_is_consumer_control(self) -> None:
+        self.assertEqual(
+            InputConfig().device_globs,
+            ("/dev/input/by-id/usb-Keychron_Lemokey_X2-event-if01",),
+        )
+
     def test_loads_explicit_fail_closed_source(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

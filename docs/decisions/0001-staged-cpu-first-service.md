@@ -7,7 +7,9 @@
 
 MACE already has Fedora's `python3-pywhispercpp`, PipeWire recording tools, an
 active ydotool user service, a stable RØDE microphone node, an RTX 2060 without
-`nvcc`, and two Lemokey keyboard interfaces.
+`nvcc`, and several Lemokey evdev interfaces. Live inspection identified the
+stable `usb-Keychron_Lemokey_X2-event-if01` Consumer Control link as the sole
+interface advertising `KEY_MACRO28`.
 
 The Whisper key must become useful without destabilizing the working XKB,
 firmware, Meta, Any, mouse-layer, or Level5 paths.

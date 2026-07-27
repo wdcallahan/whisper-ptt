@@ -62,8 +62,7 @@ class InputConfig:
     key_name: str = "KEY_MACRO28"
     device: str = ""
     device_globs: tuple[str, ...] = (
-        "/dev/input/by-id/usb-Keychron_Lemokey_X2-event-kbd",
-        "/dev/input/by-id/usb-Keychron_Lemokey_X2-if01-event-kbd",
+        "/dev/input/by-id/usb-Keychron_Lemokey_X2-event-if01",
     )
     reconnect_seconds: float = 1.0
 

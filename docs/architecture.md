@@ -15,7 +15,8 @@ microphone choice, or the three-monkeys emergency device kill switches.
 
 ## End-to-end flow
 
-1. The listener searches only configured Lemokey by-id paths.
+1. The listener searches only the configured stable Lemokey Consumer Control
+   path, `/dev/input/by-id/usb-Keychron_Lemokey_X2-event-if01`.
 2. It opens the unique device advertising `KEY_MACRO28` without grabbing it.
 3. A down event captures the focused GNOME window and starts `pw-record`.
 4. Repeat events are ignored.
@@ -126,8 +127,8 @@ Successful directories are removed unless
   waits briefly for a worker, and leaves diagnostics.
 - Five failed startup attempts within 30 seconds trip systemd's start limit
   instead of creating an endless restart loop.
-- Device discovery retries after unplug/replug without hardcoding `event5` or
-  `event9`.
+- Device discovery retries after unplug/replug through the stable by-ID link
+  without hardcoding the current `event8`.
 
 ## Acceleration boundary
 

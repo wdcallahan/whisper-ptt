@@ -23,7 +23,7 @@ Version `0.1.0` is a staged CPU-first implementation for MACE:
 - GNOME Shell 50 on Wayland
 - AMD Ryzen 5 5600G, six physical cores
 - RØDE NT-USB Mini
-- Lemokey X2 `KEY_MACRO28`
+- Lemokey X2 `KEY_MACRO28` on its stable Consumer Control by-ID interface
 - Fedora `python3-pywhispercpp` 1.4
 - the existing user `ydotool.service`
 - the enabled Window Calls GNOME extension

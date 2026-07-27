@@ -57,7 +57,9 @@ nova-whisper-ptt doctor --allow-missing-model
 
 Every line must say `PASS`. In particular:
 
-- exactly one Lemokey interface advertises `KEY_MACRO28`;
+- the stable
+  `/dev/input/by-id/usb-Keychron_Lemokey_X2-event-if01` Consumer Control
+  interface uniquely advertises `KEY_MACRO28`;
 - the exact serial-bearing RØDE source exists;
 - Window Calls reports one focused window;
 - ydotoold is active.
