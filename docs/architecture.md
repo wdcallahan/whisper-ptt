@@ -23,13 +23,15 @@ microphone choice, or the three-monkeys emergency device kill switches.
 4. Repeat events are ignored.
 5. The up event changes state to Transcribing immediately and finalizes WAV.
 6. A preloaded local `base.en` model produces final segments.
-7. Text normalization collapses whitespace, maps a small documented set of
+7. An annotation-only result such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`,
+   or `<|nospeech|>` becomes an informational notification and no keystrokes.
+8. Text normalization collapses whitespace, maps a small documented set of
    typographic punctuation to ASCII, and appends exactly one inter-utterance
    space.
-8. The focus guard verifies the same GNOME window is still focused.
-9. The injector sends ASCII bytes on standard input to
+9. The focus guard verifies the same GNOME window is still focused.
+10. The injector sends ASCII bytes on standard input to
    `ydotool type --file=- --escape=0`.
-10. Success removes per-utterance files by default and records text-free timing
+11. Success removes per-utterance files by default and records text-free timing
     metrics.
 
 ## States
@@ -39,7 +41,7 @@ microphone choice, or the three-monkeys emergency device kill switches.
 | Starting | None | Model loaded → Idle; failure → process exit |
 | Idle | One press | Recorder started → Recording |
 | Recording | Release; repeats ignored | Release → Transcribing; loss/timeout → Error |
-| Transcribing | New presses rejected | Empty → Idle; text → Injecting; failure → Error |
+| Transcribing | New presses rejected | Empty/annotation → Idle plus information; text → Injecting; failure → Error |
 | Injecting | New presses rejected | Success → Idle; failure/focus change → Error |
 | Error | New press clears and retries | Valid press → Recording |
 | Stopped | None | User service restart |
@@ -111,6 +113,12 @@ the result recoverable.
 This dependency is checked before activation. Replacing it with a narrow
 Nova-owned focus broker is a possible later hardening step, not a prerequisite
 for the first MACE proof.
+
+Every Error transition raises an eight-second attention notification. That
+includes a focus mismatch before injection and the post-injection audit warning
+that already-emitted text may have crossed windows. Annotation-only model
+results are not errors: they return to Idle, raise a shorter informational
+notification naming the suppressed annotation, and inject nothing.
 
 ## Failure artifacts
 

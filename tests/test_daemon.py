@@ -53,8 +53,11 @@ class FakeRecorder:
 
 
 class FakeTranscriber:
+    def __init__(self, text=" hello world") -> None:
+        self.text = text
+
     def transcribe(self, audio_path):
-        return Transcript(" hello world", 0.01, 1)
+        return Transcript(self.text, 0.01, 1)
 
 
 class FakeInjector:
@@ -151,6 +154,46 @@ class ControllerTests(unittest.TestCase):
                     State.IDLE,
                 ],
             )
+
+    def test_annotation_becomes_notification_not_keystrokes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            publisher = FakePublisher()
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                make_config(root),
+                FakeRecorder(),
+                FakeTranscriber("[BLANK_AUDIO]"),
+                injector,
+                FakeFocus(),
+                publisher,
+                timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            controller.release()
+            self._wait_for(controller, State.IDLE)
+
+            self.assertEqual(injector.texts, [])
+            self.assertEqual(
+                publisher.states[-1],
+                (
+                    State.IDLE,
+                    "Whisper reported [BLANK_AUDIO]; inserted nothing.",
+                ),
+            )
+            self.assertEqual(
+                publisher.notices[-1],
+                (
+                    "Nova Whisper: non-speech",
+                    "Whisper reported [BLANK_AUDIO]; inserted nothing.",
+                ),
+            )
+            metrics = (root / "state" / "metrics.jsonl").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn('"outcome": "annotation"', metrics)
+            self.assertIn('"character_count": 0', metrics)
 
     def test_focus_change_preserves_audio_and_transcript_without_injection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

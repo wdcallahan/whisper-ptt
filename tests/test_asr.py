@@ -6,11 +6,36 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from nova_whisper_ptt.asr import TranscriptionError, WhisperTranscriber
+from nova_whisper_ptt.asr import (
+    TranscriptionError,
+    WhisperTranscriber,
+    classify_transcript_annotation,
+)
 from nova_whisper_ptt.config import WhisperConfig
 
 
 class AsrTests(unittest.TestCase):
+    def test_classifies_annotation_only_transcripts(self) -> None:
+        for text in (
+            "[BLANK_AUDIO]",
+            " [Music] ",
+            "<|nospeech|>",
+            "(silence)",
+            "♪",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(classify_transcript_annotation(text), text.strip())
+
+    def test_does_not_classify_spoken_or_mixed_text_as_annotation(self) -> None:
+        for text in (
+            "blank audio",
+            "I heard [music] next door.",
+            "(this is ordinary dictated text)",
+            "[1]",
+        ):
+            with self.subTest(text=text):
+                self.assertIsNone(classify_transcript_annotation(text))
+
     def test_uses_existing_model_and_joins_segments(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             model_path = Path(temporary) / "model.bin"

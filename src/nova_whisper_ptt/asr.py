@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +19,59 @@ class Transcript:
     text: str
     elapsed_seconds: float
     segment_count: int
+
+
+_SQUARE_ANNOTATION = re.compile(
+    r"^\[(?=[^\]\r\n]*[A-Za-z])[A-Za-z0-9 _-]{1,80}\][.!]?$"
+)
+_CONTROL_ANNOTATION = re.compile(
+    r"^<\|(?=[^|\r\n]*[A-Za-z])[A-Za-z0-9 _-]{1,80}\|>[.!]?$"
+)
+_PARENTHETICAL_ANNOTATION = re.compile(r"^\(([^()\r\n]{1,80})\)[.!]?$")
+_KNOWN_PARENTHETICAL_CUES = frozenset(
+    {
+        "applause",
+        "background noise",
+        "blank audio",
+        "clapping",
+        "cough",
+        "coughing",
+        "inaudible",
+        "laughing",
+        "laughter",
+        "music",
+        "no audio",
+        "no speech",
+        "noise",
+        "silence",
+        "sound effect",
+        "sound effects",
+        "unintelligible",
+    }
+)
+_MUSICAL_CUE_CHARACTERS = frozenset("♪♫♬♩ ")
+
+
+def classify_transcript_annotation(text: str) -> str | None:
+    """Return an annotation-only transcript that must not become keystrokes."""
+
+    candidate = re.sub(r"\s+", " ", text).strip()
+    if not candidate:
+        return None
+    if _SQUARE_ANNOTATION.fullmatch(candidate):
+        return candidate
+    if _CONTROL_ANNOTATION.fullmatch(candidate):
+        return candidate
+    parenthetical = _PARENTHETICAL_ANNOTATION.fullmatch(candidate)
+    if parenthetical:
+        label = re.sub(
+            r"[\s_-]+", " ", parenthetical.group(1).strip().casefold()
+        )
+        if label in _KNOWN_PARENTHETICAL_CUES:
+            return candidate
+    if all(character in _MUSICAL_CUE_CHARACTERS for character in candidate):
+        return candidate
+    return None
 
 
 class WhisperTranscriber:

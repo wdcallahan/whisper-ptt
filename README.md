@@ -49,7 +49,8 @@ passed there.
 | Lost release | Device loss aborts capture; a 180-second ceiling stops an orphaned recording. |
 | Overlapping inference | A press while busy is rejected visibly. |
 | Focus changes | A mismatch before injection blocks all typing. A second check after `ydotool` finishes detects and warns when text may have followed focus across windows; emitted characters cannot be recalled. |
-| Empty/short audio | Nothing is injected. |
+| Empty/short audio | Nothing is injected. A tap, empty result, or annotation-only result becomes a desktop notification. |
+| Whisper annotations | A whole-result subtitle/control cue such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`, or `<\|nospeech\|>` is classified as non-speech, shown in a notification, and never typed. Mixed ordinary speech is not silently rewritten. |
 | Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |
 | Unicode ambiguity | The first proof maps common smart punctuation to ASCII and rejects all remaining non-ASCII text. |
 | Damaged model | Startup verifies the official `base.en` byte count and SHA-256 before loading it. |
@@ -179,6 +180,11 @@ Privacy-preserving timing history:
 ```text
 ~/.local/state/nova-whisper-ptt/metrics.jsonl
 ```
+
+Runtime failures, including focus changes before or after injection, enter the
+Error state and raise an eight-second attention notification. Non-speech
+annotations and too-short taps return to Idle and raise a shorter informational
+notification instead.
 
 ## Immediate rollback
 

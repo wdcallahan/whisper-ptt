@@ -152,6 +152,11 @@ Focus a harmless text field in another window, hold Whisper while speaking one
 sentence, and release it. Confirm Recording, Transcribing, and Ready
 notifications replace one another, and the sentence appears once.
 
+Tap and release Whisper without speaking, then hold it briefly in silence.
+Expected: no text appears. A too-short tap reports that nothing was inserted;
+an annotation-only model result such as `[BLANK_AUDIO]` appears in a
+non-speech notification rather than in the focused text field.
+
 For a reliable pre-injection rejection, begin another recording in the text
 editor, change focus while still holding Whisper, and then release. Expected:
 nothing is inserted and the error notification says focus changed.

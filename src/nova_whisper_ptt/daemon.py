@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from .asr import WhisperTranscriber
+from .asr import WhisperTranscriber, classify_transcript_annotation
 from .audio import PipeWireRecorder, Recording
 from .config import Config
 from .devices import DeviceDiscoveryError, discover_device, key_code
@@ -181,12 +181,34 @@ class PushToTalkController:
                 self._complete_success(
                     utterance_dir, "Utterance was too short; inserted nothing."
                 )
+                self.publisher.notice(
+                    "Nova Whisper: no speech",
+                    "The Whisper-key tap was too short; nothing was inserted.",
+                )
                 return
 
             transcript = self.transcriber.transcribe(audio_path)
             (utterance_dir / "transcript.raw.txt").write_text(
                 transcript.text + "\n", encoding="utf-8"
             )
+            annotation = classify_transcript_annotation(transcript.text)
+            if annotation is not None:
+                self._record_metric(
+                    "annotation",
+                    recording_ms,
+                    time.monotonic() - released_at,
+                    0,
+                )
+                detail = (
+                    f"Whisper reported {annotation}; inserted nothing."
+                )
+                self._complete_success(utterance_dir, detail)
+                self.publisher.notice(
+                    "Nova Whisper: non-speech",
+                    detail,
+                )
+                return
+
             normalized = normalize_text(transcript.text, self.config.injection)
             if not normalized:
                 self._record_metric(
@@ -197,6 +219,10 @@ class PushToTalkController:
                 )
                 self._complete_success(
                     utterance_dir, "No speech recognized; inserted nothing."
+                )
+                self.publisher.notice(
+                    "Nova Whisper: no speech",
+                    "No speech was recognized; nothing was inserted.",
                 )
                 return
 
