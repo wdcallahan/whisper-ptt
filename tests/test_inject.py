@@ -9,11 +9,17 @@ from nova_whisper_ptt.inject import InjectionError, YdotoolInjector, normalize_t
 
 class InjectionTests(unittest.TestCase):
     def test_normalizes_whisper_punctuation_without_rewriting_words(self) -> None:
-        config = InjectionConfig()
+        config = InjectionConfig(trailing_space=False)
         self.assertEqual(
             normalize_text("  “Hello”\nworld—it’s me…  ", config),
             '"Hello" world-it\'s me...',
         )
+
+    def test_default_appends_exactly_one_inter_utterance_space(self) -> None:
+        config = InjectionConfig()
+        normalized = normalize_text("Hello.   ", config)
+        self.assertEqual(normalized, "Hello. ")
+        self.assertEqual(normalize_text(normalized, config), "Hello. ")
 
     def test_rejects_unmapped_unicode_in_ascii_proof(self) -> None:
         with self.assertRaisesRegex(InjectionError, "U\\+03B2"):
@@ -26,7 +32,9 @@ class InjectionTests(unittest.TestCase):
             calls.append((command, kwargs))
             return subprocess.CompletedProcess(command, 0, b"", b"")
 
-        result = YdotoolInjector(InjectionConfig(), runner=runner).inject(
+        result = YdotoolInjector(
+            InjectionConfig(trailing_space=False), runner=runner
+        ).inject(
             r"-literal \n"
         )
         command, kwargs = calls[0]

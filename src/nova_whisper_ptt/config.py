@@ -99,7 +99,7 @@ class InjectionConfig:
     enabled: bool = True
     ydotool: str = "/usr/bin/ydotool"
     ascii_only: bool = True
-    trailing_space: bool = False
+    trailing_space: bool = True
     timeout_seconds: float = 15.0
 
 
@@ -199,7 +199,7 @@ def load_config(path: Path | str | None = None) -> Config:
         enabled=_boolean(injection_data, "enabled", True),
         ydotool=str(injection_data.get("ydotool", "/usr/bin/ydotool")),
         ascii_only=_boolean(injection_data, "ascii_only", True),
-        trailing_space=_boolean(injection_data, "trailing_space", False),
+        trailing_space=_boolean(injection_data, "trailing_space", True),
         timeout_seconds=float(injection_data.get("timeout_seconds", 15.0)),
     )
     focus_config = FocusConfig(

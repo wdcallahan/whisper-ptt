@@ -138,7 +138,7 @@ class ControllerTests(unittest.TestCase):
                 self.assertFalse(controller.press())
             self.assertTrue(controller.release())
             self._wait_for(controller, State.IDLE)
-            self.assertEqual(injector.texts, ["hello world"])
+            self.assertEqual(injector.texts, ["hello world "])
             self.assertEqual(
                 [state for state, _ in publisher.states],
                 [

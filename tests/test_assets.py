@@ -29,7 +29,7 @@ class DeploymentAssetTests(unittest.TestCase):
                 "9f00ec8869eee3fdfb897afe36c6d002"
             ),
             "{{ nova_whisper_ptt_threads }}": "6",
-            "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "false",
+            "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "true",
             "{{ nova_whisper_ptt_success_notification | bool | lower }}": "true",
             "{{ nova_whisper_ptt_state_dir }}": "/tmp/state",
             "{{ ansible_facts.user_uid }}": "1000",
@@ -45,6 +45,7 @@ class DeploymentAssetTests(unittest.TestCase):
         )
         self.assertEqual(config["audio"]["source"], "alsa_input.approved")
         self.assertEqual(config["whisper"]["expected_size_bytes"], 147_964_211)
+        self.assertTrue(config["injection"]["trailing_space"])
         self.assertFalse(config["runtime"]["retain_successful_audio"])
 
     def test_service_has_bounded_startup_retries(self) -> None:

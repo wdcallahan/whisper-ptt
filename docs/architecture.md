@@ -2,7 +2,8 @@
 
 - **Version:** 0.1.0
 - **Date:** 2026-07-26
-- **Status:** Implemented; awaiting staged MACE acceptance
+- **Status:** Positive foreground dictation accepted on MACE; safety and reboot
+  acceptance remain
 
 ## Boundary
 
@@ -22,8 +23,9 @@ microphone choice, or the three-monkeys emergency device kill switches.
 4. Repeat events are ignored.
 5. The up event changes state to Transcribing immediately and finalizes WAV.
 6. A preloaded local `base.en` model produces final segments.
-7. Text normalization collapses whitespace and maps a small documented set of
-   typographic punctuation to ASCII.
+7. Text normalization collapses whitespace, maps a small documented set of
+   typographic punctuation to ASCII, and appends exactly one inter-utterance
+   space.
 8. The focus guard verifies the same GNOME window is still focused.
 9. The injector sends ASCII bytes on standard input to
    `ydotool type --file=- --escape=0`.
@@ -83,6 +85,9 @@ Model preparation is explicit and never occurs during daemon startup. Version
 
 The full hash is recomputed before model construction. A missing, partial, or
 different model fails closed even when a file exists at the configured path.
+Recognition outside English is neither configured nor accepted as a supported
+capability; familiar foreign phrases may occasionally resemble learned English
+material.
 
 ## Focus safety
 
@@ -123,6 +128,8 @@ Successful directories are removed unless
 - The evdev listener remains responsive while inference runs in one worker.
 - State and the active recorder are protected by a reentrant lock.
 - A second press never queues hidden work.
+- A 180-second timer aborts a recording with an error instead of allowing a
+  lost release to capture indefinitely.
 - MACE's PipeWire 1.6.8 `pw-record` returns status 1 after the intentional
   `SIGINT` used to finalize capture. That status is accepted only when this
   process sent the interrupt and the resulting WAV validates as complete

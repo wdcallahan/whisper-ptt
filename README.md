@@ -11,7 +11,8 @@ PB_28 → KEY_MACRO28 → evdev listener → PipeWire → pywhispercpp → ydoto
 
 Press begins recording. Holding continues one recording and ignores repeat
 events. Release finalizes the WAV, transcribes it locally, verifies that window
-focus did not change, and inserts the final text once.
+focus did not change, and inserts the final text once. Accepted transcripts end
+with one space so consecutive push-to-talk utterances remain separate.
 
 Every shell command in this repository is intentionally one physical line.
 
@@ -49,6 +50,7 @@ passed there.
 | Overlapping inference | A press while busy is rejected visibly. |
 | Focus changes | Text is not injected if the focused GNOME window changed after press. |
 | Empty/short audio | Nothing is injected. |
+| Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |
 | Unicode ambiguity | The first proof maps common smart punctuation to ASCII and rejects all remaining non-ASCII text. |
 | Damaged model | Startup verifies the official `base.en` byte count and SHA-256 before loading it. |
 | Shell interpretation | Transcript bytes go to `ydotool type --file=- --escape=0` over standard input; no shell evaluates them. |
@@ -129,6 +131,9 @@ Whisper key is pressed. Startup refuses a missing model rather than downloading
 one silently. It also refuses a model that does not match the official
 147,964,211-byte `base.en` artifact and SHA-256
 `a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002`.
+
+This `.en` artifact is deliberately English-only. Apparent recognition of
+short French phrases is incidental and is not multilingual support.
 
 ## Microphone-policy boundary
 
