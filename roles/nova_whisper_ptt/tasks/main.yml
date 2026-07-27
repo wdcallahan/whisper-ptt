@@ -1,0 +1,168 @@
+---
+- name: Require GNOME Wayland session
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.env.XDG_CURRENT_DESKTOP is defined
+      - nova_whisper_ptt_required_desktop in ansible_facts.env.XDG_CURRENT_DESKTOP
+      - ansible_facts.env.XDG_SESSION_TYPE is defined
+      - ansible_facts.env.XDG_SESSION_TYPE == nova_whisper_ptt_required_session_type
+    fail_msg: >-
+      Nova Whisper currently requires a GNOME Wayland login session.
+      Detected desktop={{ ansible_facts.env.XDG_CURRENT_DESKTOP | default('unknown') }},
+      session={{ ansible_facts.env.XDG_SESSION_TYPE | default('unknown') }}.
+
+- name: Install Nova Whisper host dependencies
+  become: true
+  ansible.builtin.package:
+    name: "{{ nova_whisper_ptt_packages }}"
+    state: present
+
+- name: Ensure Nova Whisper directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ nova_whisper_ptt_install_root }}"
+      mode: "0755"
+    - path: "{{ nova_whisper_ptt_bin_dir }}"
+      mode: "0755"
+    - path: "{{ nova_whisper_ptt_config_dir }}"
+      mode: "0700"
+    - path: "{{ nova_whisper_ptt_state_dir }}"
+      mode: "0700"
+    - path: "{{ nova_whisper_ptt_model_dir }}"
+      mode: "0700"
+    - path: "{{ nova_whisper_ptt_systemd_user_dir }}"
+      mode: "0755"
+
+- name: Install Nova Whisper Python modules
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/src/nova_whisper_ptt/"
+    dest: "{{ nova_whisper_ptt_module_dir }}/"
+    mode: preserve
+  register: nova_whisper_ptt_modules
+
+- name: Install Nova Whisper command
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/bin/nova-whisper-ptt"
+    dest: "{{ nova_whisper_ptt_bin_path }}"
+    mode: "0755"
+  register: nova_whisper_ptt_command
+
+- name: Install Nova Whisper configuration
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ nova_whisper_ptt_config_path }}"
+    mode: "0600"
+  register: nova_whisper_ptt_configuration
+
+- name: Install Nova Whisper user service
+  ansible.builtin.template:
+    src: nova-whisper-ptt.service.j2
+    dest: "{{ nova_whisper_ptt_systemd_user_dir }}/{{ nova_whisper_ptt_service_name }}"
+    mode: "0644"
+  register: nova_whisper_ptt_service_unit
+
+- name: Reload user service definitions when needed
+  ansible.builtin.systemd_service:
+    scope: user
+    daemon_reload: true
+  when: nova_whisper_ptt_service_unit.changed
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
+
+- name: Verify installed Python modules import
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - -c
+      - "import evdev, pywhispercpp"
+  changed_when: false
+
+- name: Read enabled GNOME Shell extensions
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/gsettings
+      - get
+      - org.gnome.shell
+      - enabled-extensions
+  register: nova_whisper_ptt_enabled_extensions
+  changed_when: false
+  check_mode: false
+
+- name: Require the Window Calls focus guard
+  ansible.builtin.assert:
+    that:
+      - nova_whisper_ptt_required_focus_extension in nova_whisper_ptt_enabled_extensions.stdout
+    fail_msg: >-
+      The fail-closed focus guard requires the enabled GNOME extension
+      {{ nova_whisper_ptt_required_focus_extension }}.
+
+- name: Run pre-model read-only readiness checks
+  ansible.builtin.command:
+    argv:
+      - "{{ nova_whisper_ptt_bin_path }}"
+      - --config
+      - "{{ nova_whisper_ptt_config_path }}"
+      - doctor
+      - --allow-missing-model
+  changed_when: false
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
+
+- name: Check model before explicit preparation
+  ansible.builtin.stat:
+    path: "{{ nova_whisper_ptt_model_path }}"
+  register: nova_whisper_ptt_model_before
+
+- name: Prepare the local Whisper model explicitly
+  ansible.builtin.command:
+    argv:
+      - "{{ nova_whisper_ptt_bin_path }}"
+      - --config
+      - "{{ nova_whisper_ptt_config_path }}"
+      - prepare-model
+  when: nova_whisper_ptt_prepare_model | bool
+  changed_when: not nova_whisper_ptt_model_before.stat.exists
+
+- name: Check whether the configured model is present
+  ansible.builtin.stat:
+    path: "{{ nova_whisper_ptt_model_path }}"
+  register: nova_whisper_ptt_model
+
+- name: Require a prepared model before service activation
+  ansible.builtin.assert:
+    that:
+      - nova_whisper_ptt_model.stat.exists
+      - nova_whisper_ptt_model.stat.isreg
+    fail_msg: >-
+      Refusing to activate Nova Whisper without its local model at
+      {{ nova_whisper_ptt_model_path }}. Run with
+      -e nova_whisper_ptt_prepare_model=true first.
+  when: nova_whisper_ptt_enable_service | bool
+
+- name: Enable and start or restart Nova Whisper
+  ansible.builtin.systemd_service:
+    name: "{{ nova_whisper_ptt_service_name }}"
+    scope: user
+    enabled: true
+    state: >-
+      {{
+        'restarted'
+        if (
+          nova_whisper_ptt_modules.changed or
+          nova_whisper_ptt_command.changed or
+          nova_whisper_ptt_configuration.changed or
+          nova_whisper_ptt_service_unit.changed
+        )
+        else 'started'
+      }}
+    daemon_reload: true
+  when: nova_whisper_ptt_enable_service | bool
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
+...

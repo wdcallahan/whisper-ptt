@@ -1,0 +1,39 @@
+---
+nova_whisper_ptt_packages:
+  - dbus-tools
+  - libnotify
+  - pipewire-utils
+  - python3-evdev
+  - python3-pywhispercpp
+  - ydotool
+
+nova_whisper_ptt_install_root: "{{ ansible_facts.env.HOME }}/.local/libexec/nova-whisper-ptt"
+nova_whisper_ptt_module_dir: "{{ nova_whisper_ptt_install_root }}/nova_whisper_ptt"
+nova_whisper_ptt_bin_dir: "{{ ansible_facts.env.HOME }}/.local/bin"
+nova_whisper_ptt_bin_path: "{{ nova_whisper_ptt_bin_dir }}/nova-whisper-ptt"
+nova_whisper_ptt_config_dir: "{{ ansible_facts.env.HOME }}/.config/nova-whisper-ptt"
+nova_whisper_ptt_config_path: "{{ nova_whisper_ptt_config_dir }}/config.toml"
+nova_whisper_ptt_state_dir: "{{ ansible_facts.env.HOME }}/.local/state/nova-whisper-ptt"
+nova_whisper_ptt_model_dir: "{{ ansible_facts.env.HOME }}/.local/share/nova-whisper-ptt/models"
+nova_whisper_ptt_model_name: "base.en"
+nova_whisper_ptt_model_path: "{{ nova_whisper_ptt_model_dir }}/ggml-base.en.bin"
+nova_whisper_ptt_model_size_bytes: 147964211
+nova_whisper_ptt_model_sha256: "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002"
+nova_whisper_ptt_systemd_user_dir: "{{ ansible_facts.env.HOME }}/.config/systemd/user"
+nova_whisper_ptt_service_name: "nova-whisper-ptt.service"
+
+nova_whisper_ptt_audio_source: "alsa_input.usb-R__DE_Microphones_R__DE_NT-USB_Mini_14B577D5-00.mono-fallback"
+nova_whisper_ptt_threads: 6
+nova_whisper_ptt_minimum_duration_ms: 250
+nova_whisper_ptt_maximum_duration_seconds: 180
+nova_whisper_ptt_trailing_space: false
+nova_whisper_ptt_retain_successful_audio: false
+nova_whisper_ptt_success_notification: true
+
+nova_whisper_ptt_prepare_model: false
+nova_whisper_ptt_enable_service: false
+
+nova_whisper_ptt_required_desktop: "GNOME"
+nova_whisper_ptt_required_session_type: "wayland"
+nova_whisper_ptt_required_focus_extension: "window-calls@domandoman.xyz"
+...

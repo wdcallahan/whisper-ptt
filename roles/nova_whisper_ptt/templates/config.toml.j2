@@ -1,0 +1,48 @@
+[input]
+key_name = "KEY_MACRO28"
+device = ""
+device_globs = [
+  "/dev/input/by-id/usb-Keychron_Lemokey_X2-event-kbd",
+  "/dev/input/by-id/usb-Keychron_Lemokey_X2-if01-event-kbd",
+]
+reconnect_seconds = 1.0
+
+[audio]
+source = "{{ nova_whisper_ptt_audio_source }}"
+recorder = "/usr/bin/pw-record"
+rate = 16000
+channels = 1
+sample_format = "s16"
+minimum_duration_ms = {{ nova_whisper_ptt_minimum_duration_ms }}
+maximum_duration_seconds = {{ nova_whisper_ptt_maximum_duration_seconds }}
+stop_timeout_seconds = 3.0
+
+[whisper]
+model_name = "{{ nova_whisper_ptt_model_name }}"
+model_path = "{{ nova_whisper_ptt_model_path }}"
+expected_size_bytes = {{ nova_whisper_ptt_model_size_bytes }}
+expected_sha256 = "{{ nova_whisper_ptt_model_sha256 }}"
+threads = {{ nova_whisper_ptt_threads }}
+language = "en"
+
+[injection]
+enabled = true
+ydotool = "/usr/bin/ydotool"
+ascii_only = true
+trailing_space = {{ nova_whisper_ptt_trailing_space | bool | lower }}
+timeout_seconds = 15.0
+
+[focus]
+require_unchanged = true
+dbus_send = "/usr/bin/dbus-send"
+timeout_seconds = 3.0
+
+[feedback]
+notifications = true
+notify_send = "/usr/bin/notify-send"
+success_notification = {{ nova_whisper_ptt_success_notification | bool | lower }}
+
+[runtime]
+state_dir = "{{ nova_whisper_ptt_state_dir }}"
+runtime_dir = "/run/user/{{ ansible_facts.user_uid }}/nova-whisper-ptt"
+retain_successful_audio = {{ nova_whisper_ptt_retain_successful_audio | bool | lower }}
