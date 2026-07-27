@@ -200,6 +200,30 @@ systemctl --user is-active nova-whisper-ptt.service && nova-whisper-ptt doctor &
 Test one ordinary sentence. Also verify Any, Meta+D in Ptyxis/tmux, Level5 B,
 mouse/scroll layers, and normal typing.
 
+## Accepted MACE result — 2026-07-26
+
+MACE completed this staged desktop acceptance with the following live and
+automated evidence:
+
+| Boundary | Accepted result |
+| --- | --- |
+| Key transport | The stable Lemokey Consumer Control by-ID interface uniquely advertised `KEY_MACRO28`; press and release were observed once each. |
+| Microphone | The exact serial-bearing RØDE PipeWire source recorded a complete five-second, 16 kHz mono signed-16 WAV with clear ordinary-distance speech. |
+| Model | The official 147,964,211-byte `base.en` artifact passed its pinned SHA-256 check. |
+| CPU latency | A five-second proof transcribed in 0.787 seconds on six Ryzen 5 5600G threads, so GPU acceleration was unnecessary. |
+| Injection | Reviewed text and ordinary push-to-talk dictation appeared once without Enter or another submission key; consecutive utterances remained separated by one managed trailing space. |
+| Empty/non-speech | A live `[BLANK_AUDIO]` result produced zero keystrokes and the informational notification `Whisper reported [BLANK_AUDIO]; inserted nothing.` |
+| Focus before injection | A changed original focus is rejected before any call to the injector. |
+| Focus after injection | Live focus changes during `ydotool` emission entered Error and warned that already-emitted characters may have been split across windows; one accepted screenshot recorded 34 emitted characters from Ptyxis to Firefox. |
+| Deployment idempotency | A no-op activated Ansible run reported `changed=0`, and the daemon PID was unchanged. |
+| Persistence | After a full system update and reboot, the service reported both `enabled` and `active`; every `doctor` check passed and ordinary dictation worked before the formal test was remembered. |
+
+The accepted residual boundary is explicit: `ydotool` is not target-bound, so
+focus can redirect an in-progress character stream before the post-injection
+audit runs. Annotation-shaped model output can be classified and suppressed,
+but an ordinary-language hallucination is indistinguishable from intended
+dictation and therefore remains reviewable user text.
+
 ## Rollback
 
 At any point, stop and disable only Nova Whisper:

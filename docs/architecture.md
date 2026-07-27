@@ -2,8 +2,8 @@
 
 - **Version:** 0.1.0
 - **Date:** 2026-07-26
-- **Status:** Positive foreground dictation accepted on MACE; safety and reboot
-  acceptance remain
+- **Status:** Accepted and persistent on MACE; CPU inference, notification,
+  focus safeguards, idempotency, and reboot boundaries proved
 
 ## Boundary
 

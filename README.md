@@ -18,7 +18,7 @@ Every shell command in this repository is intentionally one physical line.
 
 ## Current status
 
-Version `0.1.0` is a staged CPU-first implementation for MACE:
+Version `0.1.0` is the accepted CPU-first implementation on MACE:
 
 - Fedora 44
 - GNOME Shell 50 on Wayland
@@ -29,16 +29,19 @@ Version `0.1.0` is a staged CPU-first implementation for MACE:
 - the existing user `ydotool.service`
 - the enabled Window Calls GNOME extension
 
-The repository defaults are intentionally safe:
+The repository defaults for a new workstation remain intentionally staged:
 
 - Ansible installs and validates files but does **not** enable the service.
 - Model download is a separate explicit action.
 - The downloaded `base.en` model must match its pinned size and SHA-256.
 - Service activation is a second separate explicit action.
-- CPU `base.en` is the first benchmark; the available RTX 2060 is untouched.
+- CPU `base.en` is the accepted engine; the available RTX 2060 is untouched.
 
-Do not call the service accepted on a workstation until the staged runbook has
-passed there.
+MACE passed the staged desktop acceptance, persistent activation, an unchanged
+Ansible deployment, reboot acceptance, live annotation suppression, and the
+focus safeguards on 2026-07-26. Concurrent classroom-conferencing capture
+remains an explicit operational follow-up. A different workstation is not
+accepted until the same desktop runbook passes there.
 
 ## Safety properties
 
