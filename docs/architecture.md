@@ -149,6 +149,18 @@ Successful directories are removed unless
 - Device discovery retries after unplug/replug through the stable by-ID link
   without hardcoding the current `event8`.
 
+## Deployment lifecycle
+
+Ansible copies the package's top-level `*.py` sources individually. Runtime
+`__pycache__` files are deliberately outside deployment comparison so regenerated
+bytecode cannot create perpetual false changes.
+
+Source, command, configuration, and service-unit changes notify handlers.
+Service definitions reload only after a unit change. The daemon restarts only
+after a real managed-file change and only when it was already active or
+activation was explicitly requested. The explicit activation task otherwise
+uses `state: started`, so a no-op run leaves the running process untouched.
+
 ## Acceleration boundary
 
 The Ryzen 5 5600G receives six inference threads, matching its physical cores.

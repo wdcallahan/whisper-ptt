@@ -1,0 +1,21 @@
+---
+- name: Reload Nova Whisper user service definitions
+  ansible.builtin.systemd_service:
+    scope: user
+    daemon_reload: true
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
+
+- name: Restart Nova Whisper after managed changes
+  ansible.builtin.systemd_service:
+    name: "{{ nova_whisper_ptt_service_name }}"
+    scope: user
+    state: restarted
+  when: >-
+    nova_whisper_ptt_enable_service | bool or
+    nova_whisper_ptt_service_active.rc == 0
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
+...

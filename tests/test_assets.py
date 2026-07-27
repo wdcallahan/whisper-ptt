@@ -60,3 +60,30 @@ class DeploymentAssetTests(unittest.TestCase):
         self.assertIn("StartLimitBurst=5", unit)
         self.assertNotIn("StartLimitIntervalSec=0", unit)
         self.assertIn("Requires=ydotool.service", unit)
+
+    def test_deployment_ignores_bytecode_and_restarts_through_handlers(
+        self,
+    ) -> None:
+        tasks = (
+            ROOT / "roles" / "nova_whisper_ptt" / "tasks" / "main.yml"
+        ).read_text(encoding="utf-8")
+        handlers = (
+            ROOT / "roles" / "nova_whisper_ptt" / "handlers" / "main.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn(
+            'src: "{{ playbook_dir }}/src/nova_whisper_ptt/"',
+            tasks,
+        )
+        self.assertIn(
+            "playbook_dir ~ '/src/nova_whisper_ptt/*.py'",
+            tasks,
+        )
+        self.assertIn("ansible.builtin.meta: flush_handlers", tasks)
+        self.assertIn("state: started", tasks)
+        self.assertNotIn("state: restarted", tasks)
+        self.assertIn("state: restarted", handlers)
+        self.assertIn(
+            "nova_whisper_ptt_service_active.rc == 0",
+            handlers,
+        )

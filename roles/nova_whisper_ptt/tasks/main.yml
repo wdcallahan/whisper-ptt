@@ -25,6 +25,8 @@
   loop:
     - path: "{{ nova_whisper_ptt_install_root }}"
       mode: "0755"
+    - path: "{{ nova_whisper_ptt_module_dir }}"
+      mode: "0755"
     - path: "{{ nova_whisper_ptt_bin_dir }}"
       mode: "0755"
     - path: "{{ nova_whisper_ptt_config_dir }}"
@@ -38,37 +40,47 @@
 
 - name: Install Nova Whisper Python modules
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/src/nova_whisper_ptt/"
-    dest: "{{ nova_whisper_ptt_module_dir }}/"
-    mode: preserve
-  register: nova_whisper_ptt_modules
+    src: "{{ item }}"
+    dest: "{{ nova_whisper_ptt_module_dir }}/{{ item | basename }}"
+    mode: "0644"
+  loop: "{{ query('ansible.builtin.fileglob', playbook_dir ~ '/src/nova_whisper_ptt/*.py') }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  notify: Restart Nova Whisper after managed changes
 
 - name: Install Nova Whisper command
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/bin/nova-whisper-ptt"
     dest: "{{ nova_whisper_ptt_bin_path }}"
     mode: "0755"
-  register: nova_whisper_ptt_command
+  notify: Restart Nova Whisper after managed changes
 
 - name: Install Nova Whisper configuration
   ansible.builtin.template:
     src: config.toml.j2
     dest: "{{ nova_whisper_ptt_config_path }}"
     mode: "0600"
-  register: nova_whisper_ptt_configuration
+  notify: Restart Nova Whisper after managed changes
 
 - name: Install Nova Whisper user service
   ansible.builtin.template:
     src: nova-whisper-ptt.service.j2
     dest: "{{ nova_whisper_ptt_systemd_user_dir }}/{{ nova_whisper_ptt_service_name }}"
     mode: "0644"
-  register: nova_whisper_ptt_service_unit
+  notify:
+    - Reload Nova Whisper user service definitions
+    - Restart Nova Whisper after managed changes
 
-- name: Reload user service definitions when needed
-  ansible.builtin.systemd_service:
-    scope: user
-    daemon_reload: true
-  when: nova_whisper_ptt_service_unit.changed
+- name: Read current Nova Whisper service state
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/systemctl
+      - --user
+      - is-active
+      - "{{ nova_whisper_ptt_service_name }}"
+  register: nova_whisper_ptt_service_active
+  changed_when: false
+  failed_when: nova_whisper_ptt_service_active.rc not in [0, 3, 4]
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts.user_uid }}/bus"
@@ -144,23 +156,15 @@
       -e nova_whisper_ptt_prepare_model=true first.
   when: nova_whisper_ptt_enable_service | bool
 
-- name: Enable and start or restart Nova Whisper
+- name: Apply pending Nova Whisper handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start Nova Whisper explicitly
   ansible.builtin.systemd_service:
     name: "{{ nova_whisper_ptt_service_name }}"
     scope: user
     enabled: true
-    state: >-
-      {{
-        'restarted'
-        if (
-          nova_whisper_ptt_modules.changed or
-          nova_whisper_ptt_command.changed or
-          nova_whisper_ptt_configuration.changed or
-          nova_whisper_ptt_service_unit.changed
-        )
-        else 'started'
-      }}
-    daemon_reload: true
+    state: started
   when: nova_whisper_ptt_enable_service | bool
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"

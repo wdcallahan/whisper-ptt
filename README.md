@@ -135,6 +135,12 @@ one silently. It also refuses a model that does not match the official
 This `.en` artifact is deliberately English-only. Apparent recognition of
 short French phrases is incidental and is not multilingual support.
 
+Ansible installs only the package's top-level Python source files, never local
+`__pycache__` bytecode. Managed source, command, configuration, or unit changes
+notify handlers. The service restarts only when such a change occurred and it
+was already active, or when activation was explicitly requested. A no-op run
+does not restart the daemon.
+
 ## Microphone-policy boundary
 
 Whisper's source rule is intentionally narrower than desktop-wide microphone
