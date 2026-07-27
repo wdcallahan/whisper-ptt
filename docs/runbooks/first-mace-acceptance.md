@@ -11,7 +11,7 @@ Every command is one physical line.
 Start in the repository and confirm that the clone is clean and current:
 
 ```bash
-cd ~/src/nova-whisper-ptt && git status --short --branch && git pull --ff-only && git log -1 --oneline
+cd ~/src/whisper-ptt && git status --short --branch && git pull --ff-only && git log -1 --oneline
 ```
 
 The expected microphone is the RØDE NT-USB Mini. The Window Calls extension
@@ -22,7 +22,7 @@ and `ydotool.service` must already be active.
 Run code tests and Ansible syntax validation:
 
 ```bash
-cd ~/src/nova-whisper-ptt && PYTHONPATH=src python3 -m unittest discover -s tests -v && ansible-playbook --syntax-check playbook.yml
+cd ~/src/whisper-ptt && PYTHONPATH=src python3 -m unittest discover -s tests -v && ansible-playbook --syntax-check playbook.yml
 ```
 
 Expected: all tests pass and Ansible prints `playbook: playbook.yml`.
@@ -33,7 +33,7 @@ This installs packages, code, configuration, and the dormant user unit. It
 does not download a model and does not enable or start Nova Whisper:
 
 ```bash
-cd ~/src/nova-whisper-ptt && ansible-playbook playbook.yml
+cd ~/src/whisper-ptt && ansible-playbook playbook.yml
 ```
 
 The recap must show zero failures. A second run is not required during ordinary
@@ -103,7 +103,7 @@ is wrong, silent, or underwater.
 Download `base.en` to the managed local model path without enabling the service:
 
 ```bash
-cd ~/src/nova-whisper-ptt && ansible-playbook playbook.yml -e nova_whisper_ptt_prepare_model=true
+cd ~/src/whisper-ptt && ansible-playbook playbook.yml -e nova_whisper_ptt_prepare_model=true
 ```
 
 This is the only step that downloads the roughly 148 MB model. Preparation
@@ -165,7 +165,7 @@ find ~/.local/state/nova-whisper-ptt/utterances -maxdepth 2 -type f -printf '%p\
 Only after the foreground proof passes:
 
 ```bash
-cd ~/src/nova-whisper-ptt && ansible-playbook playbook.yml -e nova_whisper_ptt_enable_service=true
+cd ~/src/whisper-ptt && ansible-playbook playbook.yml -e nova_whisper_ptt_enable_service=true
 ```
 
 Verify:
