@@ -24,6 +24,7 @@ nova_whisper_ptt_service_name: "nova-whisper-ptt.service"
 
 nova_whisper_ptt_audio_source: "alsa_input.usb-R__DE_Microphones_R__DE_NT-USB_Mini_14B577D5-00.mono-fallback"
 nova_whisper_ptt_threads: 6
+nova_whisper_ptt_initial_prompt: "Joule, Pixel, Arcane Sanctum."
 nova_whisper_ptt_minimum_duration_ms: 250
 nova_whisper_ptt_maximum_duration_seconds: 180
 nova_whisper_ptt_trailing_space: true

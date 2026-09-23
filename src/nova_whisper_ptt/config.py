@@ -92,6 +92,7 @@ class WhisperConfig:
     )
     threads: int = 6
     language: str = "en"
+    initial_prompt: str = "Joule, Pixel, Arcane Sanctum."
 
 
 @dataclass(frozen=True)
@@ -194,6 +195,12 @@ def load_config(path: Path | str | None = None) -> Config:
         ),
         threads=int(whisper_data.get("threads", 6)),
         language=str(whisper_data.get("language", "en")),
+        initial_prompt=str(
+            whisper_data.get(
+                "initial_prompt",
+                "Joule, Pixel, Arcane Sanctum.",
+            )
+        ),
     )
     injection_config = InjectionConfig(
         enabled=_boolean(injection_data, "enabled", True),

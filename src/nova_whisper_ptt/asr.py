@@ -109,10 +109,14 @@ class WhisperTranscriber:
     def transcribe(self, audio_path: Path) -> Transcript:
         started = time.monotonic()
         try:
-            segments = self._model.transcribe(str(audio_path))
+            parameters: dict[str, Any] = {}
+            if self.config.initial_prompt:
+                parameters["initial_prompt"] = self.config.initial_prompt
+            segments = self._model.transcribe(str(audio_path), **parameters)
         except Exception as error:
             raise TranscriptionError(f"Whisper transcription failed: {error}") from error
-        text = "".join(str(segment.text) for segment in segments)
+        parts = [str(segment.text).strip() for segment in segments]
+        text = " ".join(part for part in parts if part)
         return Transcript(
             text=text,
             elapsed_seconds=time.monotonic() - started,
