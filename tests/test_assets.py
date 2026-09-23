@@ -29,8 +29,8 @@ class DeploymentAssetTests(unittest.TestCase):
                 "9f00ec8869eee3fdfb897afe36c6d002"
             ),
             "{{ nova_whisper_ptt_threads }}": "6",
-            "{{ nova_whisper_ptt_initial_prompt }}": (
-                "Joule, Pixel, Arcane Sanctum."
+            "{{ nova_whisper_ptt_initial_prompt | to_json }}": (
+                '"Joule, Pixel, Arcane Sanctum."'
             ),
             "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "true",
             "{{ nova_whisper_ptt_success_notification | bool | lower }}": "true",
