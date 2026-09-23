@@ -23,7 +23,7 @@ expected_size_bytes = {{ nova_whisper_ptt_model_size_bytes }}
 expected_sha256 = "{{ nova_whisper_ptt_model_sha256 }}"
 threads = {{ nova_whisper_ptt_threads }}
 language = "en"
-initial_prompt = "{{ nova_whisper_ptt_initial_prompt }}"
+initial_prompt = {{ nova_whisper_ptt_initial_prompt | to_json }}
 
 [injection]
 enabled = true
