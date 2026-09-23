@@ -92,6 +92,30 @@ state
 Only `inject` and `daemon` can synthesize keyboard input. `doctor`,
 `list-inputs`, `probe-key`, `record-proof`, and `transcribe` cannot.
 
+## Updating an existing installation
+
+For a workstation that already has this repository and has completed its
+initial acceptance, normal updates are intentionally simple:
+
+```bash
+git pull --ff-only origin main
+ansible-playbook playbook.yml
+```
+
+The pull obtains the current published `main` without creating a merge commit.
+The Ansible run converges the installed files and configuration and restarts
+the service only when managed content changed and the service was already
+active.
+
+Repository-development checks are separate from ordinary deployment. Run the
+unit tests when developing or validating a change, but they are not an extra
+deployment step required every time another accepted commit is pulled onto an
+already accepted workstation.
+
+A fresh workstation is different: clone the repository, then follow
+[docs/runbooks/first-mace-acceptance.md](docs/runbooks/first-mace-acceptance.md)
+through its staged model preparation and activation boundaries.
+
 ## Development validation
 
 Run unit tests:
@@ -100,11 +124,17 @@ Run unit tests:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-Check Ansible syntax:
+A standalone Ansible syntax check is useful when a non-mutating parser check is
+specifically desired:
 
 ```bash
 ansible-playbook --syntax-check playbook.yml
 ```
+
+Do not run that automatically immediately before a normal
+`ansible-playbook playbook.yml` deployment; the normal run parses the playbook
+again, so doing both is redundant unless the separate non-mutating checkpoint
+is intentional.
 
 The normal deployment runbook is
 [docs/runbooks/first-mace-acceptance.md](docs/runbooks/first-mace-acceptance.md).
