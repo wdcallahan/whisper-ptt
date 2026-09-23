@@ -36,20 +36,22 @@ class AsrTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIsNone(classify_transcript_annotation(text))
 
-    def test_uses_existing_model_and_joins_segments(self) -> None:
+    def test_uses_existing_model_joins_segments_and_passes_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             model_path = Path(temporary) / "model.bin"
             model_path.write_bytes(b"safe-model")
             calls = []
+            transcribe_calls = []
 
             class Model:
                 def __init__(self, path, **kwargs):
                     calls.append((path, kwargs))
 
-                def transcribe(self, path):
+                def transcribe(self, path, **kwargs):
+                    transcribe_calls.append((path, kwargs))
                     return [
-                        SimpleNamespace(text=" hello"),
-                        SimpleNamespace(text=" world"),
+                        SimpleNamespace(text="Sentence one."),
+                        SimpleNamespace(text="Sentence two."),
                     ]
 
             transcriber = WhisperTranscriber(
@@ -57,14 +59,24 @@ class AsrTests(unittest.TestCase):
                     model_path=model_path,
                     expected_size_bytes=model_path.stat().st_size,
                     expected_sha256=hashlib.sha256(b"safe-model").hexdigest(),
+                    initial_prompt="Joule, Pixel, Arcane Sanctum.",
                 ),
                 model_factory=Model,
             )
             result = transcriber.transcribe(Path(temporary) / "audio.wav")
-            self.assertEqual(result.text, " hello world")
+            self.assertEqual(result.text, "Sentence one. Sentence two.")
             self.assertEqual(result.segment_count, 2)
             self.assertEqual(calls[0][0], str(model_path))
             self.assertEqual(calls[0][1]["n_threads"], 6)
+            self.assertEqual(
+                transcribe_calls,
+                [
+                    (
+                        str(Path(temporary) / "audio.wav"),
+                        {"initial_prompt": "Joule, Pixel, Arcane Sanctum."},
+                    )
+                ],
+            )
 
     def test_rejects_model_with_wrong_checksum(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

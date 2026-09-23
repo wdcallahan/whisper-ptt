@@ -60,6 +60,10 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.audio.source, "alsa_input.test")
             self.assertEqual(config.input.key_name, "KEY_MACRO28")
             self.assertEqual(config.whisper.threads, 6)
+            self.assertEqual(
+                config.whisper.initial_prompt,
+                "Joule, Pixel, Arcane Sanctum.",
+            )
             self.assertTrue(config.injection.trailing_space)
             self.assertTrue(config.focus.require_unchanged)
 
