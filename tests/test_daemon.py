@@ -63,10 +63,18 @@ class FakeTranscriber:
 class FakeInjector:
     def __init__(self) -> None:
         self.texts = []
+        self.chunks = []
 
-    def inject(self, text):
+    def inject(self, text, before_chunk=None):
+        character_count = 0
+        for offset in range(0, len(text), 8):
+            if before_chunk is not None:
+                before_chunk(character_count)
+            chunk = text[offset : offset + 8]
+            self.chunks.append(chunk)
+            character_count += len(chunk)
         self.texts.append(text)
-        return InjectionResult(len(text))
+        return InjectionResult(character_count)
 
 
 class FakeFocus:
@@ -230,6 +238,38 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue((utterances[0] / "transcript.txt").is_file())
             self.assertTrue((utterances[0] / "failure.txt").is_file())
 
+    def test_focus_change_during_injection_stops_remaining_chunks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            publisher = FakePublisher()
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                make_config(root),
+                FakeRecorder(),
+                FakeTranscriber("abcdefghijklmnop"),
+                injector,
+                FakeFocus(changed_checks=(2,)),
+                publisher,
+                timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            with self.assertLogs("nova_whisper_ptt.daemon", level="ERROR"):
+                controller.release()
+                self._wait_for(controller, State.ERROR)
+
+            self.assertEqual(injector.chunks, ["abcdefgh"])
+            self.assertEqual(injector.texts, [])
+            utterances = list((root / "state" / "utterances").iterdir())
+            self.assertEqual(len(utterances), 1)
+            failure = (utterances[0] / "failure.txt").read_text(encoding="utf-8")
+            self.assertIn("stopped after 8 characters", failure)
+            metrics = (root / "state" / "metrics.jsonl").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn('"outcome": "focus-changed-during-injection"', metrics)
+            self.assertIn('"character_count": 8', metrics)
+
     def test_focus_change_after_injection_warns_and_preserves_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -240,7 +280,7 @@ class ControllerTests(unittest.TestCase):
                 FakeRecorder(),
                 FakeTranscriber(),
                 injector,
-                FakeFocus(changed_checks=(2,)),
+                FakeFocus(changed_checks=(3,)),
                 publisher,
                 timer_factory=FakeTimer,
             )

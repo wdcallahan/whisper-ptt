@@ -51,7 +51,7 @@ accepted until the same desktop runbook passes there.
 | Key repeat | Linux repeat events are ignored. |
 | Lost release | Device loss aborts capture; a 180-second ceiling stops an orphaned recording. |
 | Overlapping inference | A press while busy is rejected visibly. |
-| Focus changes | A mismatch before injection blocks all typing. A second check after `ydotool` finishes detects and warns when text may have followed focus across windows; emitted characters cannot be recalled. |
+| Focus changes | Focus is checked before each bounded 8-character injection chunk. A mismatch stops before the next chunk, limiting any post-switch spill to the chunk already in progress. A final check still detects the end-of-injection race; emitted characters cannot be recalled. |
 | Empty/short audio | Nothing is injected. A tap, empty result, or annotation-only result becomes a desktop notification. |
 | Whisper annotations | A whole-result subtitle/control cue such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`, or `<\|nospeech\|>` is classified as non-speech, shown in a notification, and never typed. Mixed ordinary speech is not silently rewritten. |
 | Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |

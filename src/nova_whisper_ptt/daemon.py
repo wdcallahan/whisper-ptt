@@ -236,8 +236,32 @@ class PushToTalkController:
             if self.config.focus.require_unchanged:
                 if focus is None:
                     raise FocusError("no original focused-window token was captured")
-                self.focus_guard.require_same(focus)
-            result = self.injector.inject(normalized)
+
+                def require_same_focus(character_count: int) -> None:
+                    try:
+                        self.focus_guard.require_same(focus)
+                    except FocusError as error:
+                        if character_count > 0:
+                            self._record_metric(
+                                "focus-changed-during-injection",
+                                recording_ms,
+                                time.monotonic() - released_at,
+                                character_count,
+                            )
+                            raise FocusError(
+                                "focused window changed during text injection; "
+                                f"stopped after {character_count} characters; "
+                                "no further text was emitted "
+                                f"({error})"
+                            ) from error
+                        raise
+
+                result = self.injector.inject(
+                    normalized,
+                    before_chunk=require_same_focus,
+                )
+            else:
+                result = self.injector.inject(normalized)
             if self.config.focus.require_unchanged:
                 assert focus is not None
                 try:

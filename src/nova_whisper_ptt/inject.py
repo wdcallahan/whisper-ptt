@@ -12,6 +12,9 @@ class InjectionError(RuntimeError):
     """Raised rather than injecting ambiguous or unsupported text."""
 
 
+_FOCUS_GUARD_CHUNK_CHARACTERS = 8
+
+
 _ASCII_TRANSLATION = str.maketrans(
     {
         "\u00a0": " ",
@@ -58,31 +61,47 @@ class YdotoolInjector:
         self.config = config
         self._runner = runner
 
-    def inject(self, text: str) -> InjectionResult:
+    def inject(
+        self,
+        text: str,
+        before_chunk: Callable[[int], None] | None = None,
+    ) -> InjectionResult:
         if not self.config.enabled:
             raise InjectionError("text injection is disabled by configuration")
         normalized = normalize_text(text, self.config)
         if not normalized:
             return InjectionResult(character_count=0)
-        try:
-            result = self._runner(
-                [
-                    self.config.ydotool,
-                    "type",
-                    "--file=-",
-                    "--escape=0",
-                ],
-                input=normalized.encode("ascii"),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                timeout=self.config.timeout_seconds,
-                check=False,
-            )
-        except (OSError, subprocess.TimeoutExpired) as error:
-            raise InjectionError(f"ydotool injection failed: {error}") from error
-        if result.returncode != 0:
-            stderr = result.stderr.decode("utf-8", errors="replace").strip()
-            raise InjectionError(
-                f"ydotool exited with status {result.returncode}: {stderr}"
-            )
-        return InjectionResult(character_count=len(normalized))
+
+        chunk_size = (
+            _FOCUS_GUARD_CHUNK_CHARACTERS
+            if before_chunk is not None
+            else len(normalized)
+        )
+        character_count = 0
+        for offset in range(0, len(normalized), chunk_size):
+            chunk = normalized[offset : offset + chunk_size]
+            if before_chunk is not None:
+                before_chunk(character_count)
+            try:
+                result = self._runner(
+                    [
+                        self.config.ydotool,
+                        "type",
+                        "--file=-",
+                        "--escape=0",
+                    ],
+                    input=chunk.encode("ascii"),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                    timeout=self.config.timeout_seconds,
+                    check=False,
+                )
+            except (OSError, subprocess.TimeoutExpired) as error:
+                raise InjectionError(f"ydotool injection failed: {error}") from error
+            if result.returncode != 0:
+                stderr = result.stderr.decode("utf-8", errors="replace").strip()
+                raise InjectionError(
+                    f"ydotool exited with status {result.returncode}: {stderr}"
+                )
+            character_count += len(chunk)
+        return InjectionResult(character_count=character_count)

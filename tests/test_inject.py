@@ -21,6 +21,32 @@ class InjectionTests(unittest.TestCase):
         self.assertEqual(normalized, "Hello. ")
         self.assertEqual(normalize_text(normalized, config), "Hello. ")
 
+    def test_focus_guard_stops_before_the_next_bounded_chunk(self) -> None:
+        calls = []
+        checks = []
+
+        def runner(command, **kwargs):
+            calls.append((command, kwargs))
+            return subprocess.CompletedProcess(command, 0, b"", b"")
+
+        def before_chunk(character_count):
+            checks.append(character_count)
+            if character_count >= 8:
+                raise RuntimeError("focus changed")
+
+        injector = YdotoolInjector(
+            InjectionConfig(trailing_space=False), runner=runner
+        )
+        with self.assertRaisesRegex(RuntimeError, "focus changed"):
+            injector.inject(
+                "abcdefghijklmnop",
+                before_chunk=before_chunk,
+            )
+
+        self.assertEqual(checks, [0, 8])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][1]["input"], b"abcdefgh")
+
     def test_rejects_unmapped_unicode_in_ascii_proof(self) -> None:
         with self.assertRaisesRegex(InjectionError, "U\\+03B2"):
             normalize_text("beta β", InjectionConfig())
