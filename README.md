@@ -55,6 +55,7 @@ accepted until the same desktop runbook passes there.
 | Empty/short audio | Nothing is injected. A tap, empty result, or annotation-only result becomes a desktop notification. |
 | Whisper annotations | A whole-result subtitle/control cue such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`, or `<\|nospeech\|>` is classified as non-speech, shown in a notification, and never typed. Mixed ordinary speech is not silently rewritten. |
 | Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |
+| Dictated technical terms | A narrow post-transcription cleanup canonicalizes recurring Linux spellings such as `sudo`, `systemd`, `SELinux`, and `PipeWire`. Ambiguous bare `iperf` is left unchanged; explicit forms such as “I-Perf III” become `iperf3`. |
 | Unicode ambiguity | The first proof maps common smart punctuation to ASCII and rejects all remaining non-ASCII text. |
 | Damaged model | Startup verifies the official `base.en` byte count and SHA-256 before loading it. |
 | Shell interpretation | Transcript bytes go to `ydotool type --file=- --escape=0` over standard input; no shell evaluates them. |

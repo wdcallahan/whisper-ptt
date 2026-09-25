@@ -12,7 +12,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from .asr import WhisperTranscriber, classify_transcript_annotation
+from .asr import (
+    WhisperTranscriber,
+    canonicalize_transcript_text,
+    classify_transcript_annotation,
+)
 from .audio import PipeWireRecorder, Recording
 from .config import Config
 from .devices import DeviceDiscoveryError, discover_device, key_code
@@ -209,7 +213,8 @@ class PushToTalkController:
                 )
                 return
 
-            normalized = normalize_text(transcript.text, self.config.injection)
+            canonicalized = canonicalize_transcript_text(transcript.text)
+            normalized = normalize_text(canonicalized, self.config.injection)
             if not normalized:
                 self._record_metric(
                     "empty",

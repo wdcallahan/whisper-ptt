@@ -51,6 +51,28 @@ _KNOWN_PARENTHETICAL_CUES = frozenset(
 )
 _MUSICAL_CUE_CHARACTERS = frozenset("♪♫♬♩ ")
 
+_CANONICAL_TECHNICAL_TERMS = (
+    (re.compile(r"\b(?:su2|s[\s-]*u[\s-]+d[ou]|sudo)\b", re.IGNORECASE), "sudo"),
+    (re.compile(r"\bsystem[\s-]*d\b", re.IGNORECASE), "systemd"),
+    (re.compile(r"\bsystem[\s-]*ctl\b", re.IGNORECASE), "systemctl"),
+    (re.compile(r"\bjournal[\s-]*ctl\b", re.IGNORECASE), "journalctl"),
+    (re.compile(r"\b(?:s[\s-]*e|isse)[\s-]*linux\b", re.IGNORECASE), "SELinux"),
+    (re.compile(r"\bfirewall[\s-]*d\b", re.IGNORECASE), "firewalld"),
+    (re.compile(r"\bpipe[\s-]*wire\b", re.IGNORECASE), "PipeWire"),
+    (re.compile(r"\bpod[\s-]*man\b", re.IGNORECASE), "Podman"),
+    (re.compile(r"\bquad[\s-]*let\b", re.IGNORECASE), "Quadlet"),
+    (re.compile(r"\bansible\b", re.IGNORECASE), "Ansible"),
+    (re.compile(r"\bi[\s-]*perf[\s-]*(?:3|iii)\b", re.IGNORECASE), "iperf3"),
+)
+
+
+def canonicalize_transcript_text(text: str) -> str:
+    """Normalize recurring technical spellings in dictated prose."""
+
+    for pattern, replacement in _CANONICAL_TECHNICAL_TERMS:
+        text = pattern.sub(replacement, text)
+    return text
+
 
 def classify_transcript_annotation(text: str) -> str | None:
     """Return an annotation-only transcript that must not become keystrokes."""

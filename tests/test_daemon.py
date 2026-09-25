@@ -163,6 +163,28 @@ class ControllerTests(unittest.TestCase):
                 ],
             )
 
+    def test_canonicalizes_technical_terms_before_injection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                make_config(root),
+                FakeRecorder(),
+                FakeTranscriber("I used SU-DU with System D and SE Linux."),
+                injector,
+                FakeFocus(),
+                FakePublisher(),
+                timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            controller.release()
+            self._wait_for(controller, State.IDLE)
+            self.assertEqual(
+                injector.texts,
+                ["I used sudo with systemd and SELinux. "],
+            )
+
     def test_annotation_becomes_notification_not_keystrokes(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

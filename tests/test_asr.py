@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from nova_whisper_ptt.asr import (
     TranscriptionError,
     WhisperTranscriber,
+    canonicalize_transcript_text,
     classify_transcript_annotation,
 )
 from nova_whisper_ptt.config import WhisperConfig
@@ -35,6 +36,25 @@ class AsrTests(unittest.TestCase):
         ):
             with self.subTest(text=text):
                 self.assertIsNone(classify_transcript_annotation(text))
+
+    def test_canonicalizes_recurring_linux_terms_without_guessing_bare_iperf(self) -> None:
+        text = (
+            "I used su2 and SU-DU with the system d service, SystemCTL, "
+            "JournalCTL, SE Linux, Firewall D, Pipewire, pod man, a quadlet, "
+            "ansible, and I-Perf III."
+        )
+        self.assertEqual(
+            canonicalize_transcript_text(text),
+            (
+                "I used sudo and sudo with the systemd service, systemctl, "
+                "journalctl, SELinux, firewalld, PipeWire, Podman, a Quadlet, "
+                "Ansible, and iperf3."
+            ),
+        )
+        self.assertEqual(
+            canonicalize_transcript_text("I used iperf between two hosts."),
+            "I used iperf between two hosts.",
+        )
 
     def test_uses_existing_model_joins_segments_and_passes_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
