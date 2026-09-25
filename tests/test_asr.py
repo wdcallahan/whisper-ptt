@@ -56,6 +56,37 @@ class AsrTests(unittest.TestCase):
             "I used iperf between two hosts.",
         )
 
+    def test_sudo_variants_require_nearby_linux_context(self) -> None:
+        cases = {
+            "I used SUDU to install the package.": (
+                "I used sudo to install the package."
+            ),
+            "Run that command with S U D O.": (
+                "Run that command with sudo."
+            ),
+            "You can use sudo to become root for this one command.": (
+                "You can use sudo to become root for this one command."
+            ),
+            "sudo is not the same thing as SU.": (
+                "sudo is not the same thing as SU."
+            ),
+            "I don't need a root shell. I just need to ask you to do this one thing.": (
+                "I don't need a root shell. I just need to sudo this one thing."
+            ),
+            "I used SU-Doo to restart the service.": (
+                "I used sudo to restart the service."
+            ),
+            "I'll ask you to do that tomorrow.": (
+                "I'll ask you to do that tomorrow."
+            ),
+            "S UDO will get sandwiches made.": (
+                "S UDO will get sandwiches made."
+            ),
+        }
+        for source, expected in cases.items():
+            with self.subTest(source=source):
+                self.assertEqual(canonicalize_transcript_text(source), expected)
+
     def test_uses_existing_model_joins_segments_and_passes_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             model_path = Path(temporary) / "model.bin"

@@ -51,8 +51,24 @@ _KNOWN_PARENTHETICAL_CUES = frozenset(
 )
 _MUSICAL_CUE_CHARACTERS = frozenset("♪♫♬♩ ")
 
+_SUDO_VARIANT = re.compile(
+    r"\b(?:"
+    r"su2|sud|sudu|"
+    r"s[\s-]*u[\s-]*(?:d[\s-]*o|do{1,2}|du|due)|"
+    r"this[\s-]+udo|"
+    r"this[\s-]+you[\s-]+do|"
+    r"ask[\s-]+you[\s-]+to[\s-]+do"
+    r")\b",
+    re.IGNORECASE,
+)
+_SUDO_CONTEXT = re.compile(
+    r"\b(?:root|command|package|service|shell|install(?:ed|ing)?|"
+    r"dnf|rpm|systemd|systemctl|journalctl|selinux|firewalld|"
+    r"podman|quadlet|ansible|privileg(?:e|ed)|administrator|admin)\b",
+    re.IGNORECASE,
+)
+
 _CANONICAL_TECHNICAL_TERMS = (
-    (re.compile(r"\b(?:su2|sud|s[\s-]+udo|this[\s-]+udo|this[\s-]+you[\s-]+do|s[\s-]*u[\s-]+(?:d[ou]|due)|sudo)\b", re.IGNORECASE), "sudo"),
     (re.compile(r"\bsystem[\s-]*d\b", re.IGNORECASE), "systemd"),
     (re.compile(r"\bsystem[\s-]*ctl\b", re.IGNORECASE), "systemctl"),
     (re.compile(r"\bjournal[\s-]*ctl\b", re.IGNORECASE), "journalctl"),
@@ -71,7 +87,16 @@ def canonicalize_transcript_text(text: str) -> str:
 
     for pattern, replacement in _CANONICAL_TECHNICAL_TERMS:
         text = pattern.sub(replacement, text)
-    return text
+
+    def canonicalize_sudo(match: re.Match[str]) -> str:
+        context_start = max(0, match.start() - 96)
+        context_end = min(len(text), match.end() + 96)
+        context = text[context_start:context_end]
+        if _SUDO_CONTEXT.search(context):
+            return "sudo"
+        return match.group(0)
+
+    return _SUDO_VARIANT.sub(canonicalize_sudo, text)
 
 
 def classify_transcript_annotation(text: str) -> str | None:
