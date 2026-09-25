@@ -52,7 +52,7 @@ _KNOWN_PARENTHETICAL_CUES = frozenset(
 _MUSICAL_CUE_CHARACTERS = frozenset("♪♫♬♩ ")
 
 _CANONICAL_TECHNICAL_TERMS = (
-    (re.compile(r"\b(?:su2|sud|s[\s-]*u[\s-]+(?:d[ou]|due)|sudo)\b", re.IGNORECASE), "sudo"),
+    (re.compile(r"\b(?:su2|sud|s[\s-]+udo|this[\s-]+udo|s[\s-]*u[\s-]+(?:d[ou]|due)|sudo)\b", re.IGNORECASE), "sudo"),
     (re.compile(r"\bsystem[\s-]*d\b", re.IGNORECASE), "systemd"),
     (re.compile(r"\bsystem[\s-]*ctl\b", re.IGNORECASE), "systemctl"),
     (re.compile(r"\bjournal[\s-]*ctl\b", re.IGNORECASE), "journalctl"),
