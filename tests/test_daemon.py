@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import time
 import unittest
@@ -162,6 +163,17 @@ class ControllerTests(unittest.TestCase):
                     State.IDLE,
                 ],
             )
+            metrics = [
+                json.loads(line)
+                for line in (root / "state" / "metrics.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+            inserted = metrics[-1]
+            self.assertEqual(inserted["outcome"], "inserted")
+            self.assertEqual(inserted["transcription_seconds"], 0.01)
+            self.assertGreaterEqual(inserted["release_to_injection_seconds"], 0)
+            self.assertGreaterEqual(inserted["injection_seconds"], 0)
 
     def test_canonicalizes_technical_terms_before_injection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

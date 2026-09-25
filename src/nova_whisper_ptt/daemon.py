@@ -238,6 +238,7 @@ class PushToTalkController:
                 if self._shutting_down:
                     raise InjectionError("service stopped before text injection")
                 self._set_state(State.INJECTING, "Checking focus and inserting text.")
+            injection_started_at = time.monotonic()
             if self.config.focus.require_unchanged:
                 if focus is None:
                     raise FocusError("no original focused-window token was captured")
@@ -252,6 +253,13 @@ class PushToTalkController:
                                 recording_ms,
                                 time.monotonic() - released_at,
                                 character_count,
+                                transcription_seconds=transcript.elapsed_seconds,
+                                release_to_injection_seconds=(
+                                    injection_started_at - released_at
+                                ),
+                                injection_seconds=(
+                                    time.monotonic() - injection_started_at
+                                ),
                             )
                             raise FocusError(
                                 "focused window changed during text injection; "
@@ -267,6 +275,7 @@ class PushToTalkController:
                 )
             else:
                 result = self.injector.inject(normalized)
+            injection_completed_at = time.monotonic()
             if self.config.focus.require_unchanged:
                 assert focus is not None
                 try:
@@ -277,6 +286,13 @@ class PushToTalkController:
                         recording_ms,
                         time.monotonic() - released_at,
                         result.character_count,
+                        transcription_seconds=transcript.elapsed_seconds,
+                        release_to_injection_seconds=(
+                            injection_started_at - released_at
+                        ),
+                        injection_seconds=(
+                            injection_completed_at - injection_started_at
+                        ),
                     )
                     raise FocusError(
                         "focused window differed after text injection; "
@@ -289,6 +305,13 @@ class PushToTalkController:
                 recording_ms,
                 time.monotonic() - released_at,
                 result.character_count,
+                transcription_seconds=transcript.elapsed_seconds,
+                release_to_injection_seconds=(
+                    injection_started_at - released_at
+                ),
+                injection_seconds=(
+                    injection_completed_at - injection_started_at
+                ),
             )
             self._complete_success(
                 utterance_dir,
@@ -376,6 +399,10 @@ class PushToTalkController:
         recording_ms: int,
         release_to_completion_seconds: float,
         character_count: int,
+        *,
+        transcription_seconds: float | None = None,
+        release_to_injection_seconds: float | None = None,
+        injection_seconds: float | None = None,
     ) -> None:
         self.config.runtime.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         payload = {
@@ -387,6 +414,14 @@ class PushToTalkController:
             ),
             "character_count": character_count,
         }
+        if transcription_seconds is not None:
+            payload["transcription_seconds"] = round(transcription_seconds, 6)
+        if release_to_injection_seconds is not None:
+            payload["release_to_injection_seconds"] = round(
+                release_to_injection_seconds, 6
+            )
+        if injection_seconds is not None:
+            payload["injection_seconds"] = round(injection_seconds, 6)
         with (self.config.runtime.state_dir / "metrics.jsonl").open(
             "a", encoding="utf-8"
         ) as stream:

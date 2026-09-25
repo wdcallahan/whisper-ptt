@@ -62,7 +62,9 @@ accepted until the same desktop runbook passes there.
 | Failure | Failures before injection emit nothing. A detected post-injection focus change may have emitted text; it raises an attention notification and retains WAV, transcripts, and failure details. |
 
 Successful audio is removed by default. Aggregate timing metrics contain no
-transcript text.
+transcript text. Successful insertions record transcription time, release-to-
+injection time, injection time, and total release-to-completion time so latency
+outliers can be localized without retaining dictated content.
 
 ## Repository layout
 
