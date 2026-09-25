@@ -101,6 +101,8 @@ class InjectionConfig:
     ydotool: str = "/usr/bin/ydotool"
     ascii_only: bool = True
     trailing_space: bool = True
+    key_delay_ms: int = 8
+    key_hold_ms: int = 8
     timeout_seconds: float = 15.0
 
 
@@ -207,6 +209,8 @@ def load_config(path: Path | str | None = None) -> Config:
         ydotool=str(injection_data.get("ydotool", "/usr/bin/ydotool")),
         ascii_only=_boolean(injection_data, "ascii_only", True),
         trailing_space=_boolean(injection_data, "trailing_space", True),
+        key_delay_ms=int(injection_data.get("key_delay_ms", 8)),
+        key_hold_ms=int(injection_data.get("key_hold_ms", 8)),
         timeout_seconds=float(injection_data.get("timeout_seconds", 15.0)),
     )
     focus_config = FocusConfig(
@@ -283,6 +287,10 @@ def validate_config(config: Config) -> None:
         raise ConfigError(
             "whisper.expected_sha256 must be 64 lowercase hexadecimal characters"
         )
+    if config.injection.key_delay_ms < 0:
+        raise ConfigError("injection.key_delay_ms cannot be negative")
+    if config.injection.key_hold_ms < 0:
+        raise ConfigError("injection.key_hold_ms cannot be negative")
     if config.injection.timeout_seconds <= 0:
         raise ConfigError("injection.timeout_seconds must be greater than zero")
     if config.focus.timeout_seconds <= 0:

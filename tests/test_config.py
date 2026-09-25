@@ -65,7 +65,26 @@ class ConfigTests(unittest.TestCase):
                 "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace.",
             )
             self.assertTrue(config.injection.trailing_space)
+            self.assertEqual(config.injection.key_delay_ms, 8)
+            self.assertEqual(config.injection.key_hold_ms, 8)
             self.assertTrue(config.focus.require_unchanged)
+
+    def test_rejects_negative_injection_timing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "config.toml"
+            path.write_text(
+                CONFIG.format(
+                    rate=16000,
+                    model=root / "model.bin",
+                    state=root / "state",
+                    runtime=root / "runtime",
+                )
+                + "key_delay_ms = -1\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ConfigError, "key_delay_ms cannot be negative"):
+                load_config(path)
 
     def test_rejects_non_whisper_sample_rate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

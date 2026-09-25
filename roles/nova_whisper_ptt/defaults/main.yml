@@ -28,6 +28,8 @@ nova_whisper_ptt_initial_prompt: "Joule, Pixel, Arcane Sanctum, sudo, systemd, s
 nova_whisper_ptt_minimum_duration_ms: 250
 nova_whisper_ptt_maximum_duration_seconds: 180
 nova_whisper_ptt_trailing_space: true
+nova_whisper_ptt_key_delay_ms: 8
+nova_whisper_ptt_key_hold_ms: 8
 nova_whisper_ptt_retain_successful_audio: false
 nova_whisper_ptt_success_notification: true
 

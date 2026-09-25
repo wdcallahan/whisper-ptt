@@ -87,6 +87,8 @@ class YdotoolInjector:
                     [
                         self.config.ydotool,
                         "type",
+                        f"--key-delay={self.config.key_delay_ms}",
+                        f"--key-hold={self.config.key_hold_ms}",
                         "--file=-",
                         "--escape=0",
                     ],

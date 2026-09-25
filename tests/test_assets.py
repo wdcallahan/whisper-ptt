@@ -33,6 +33,8 @@ class DeploymentAssetTests(unittest.TestCase):
                 '"Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace."'
             ),
             "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "true",
+            "{{ nova_whisper_ptt_key_delay_ms }}": "8",
+            "{{ nova_whisper_ptt_key_hold_ms }}": "8",
             "{{ nova_whisper_ptt_success_notification | bool | lower }}": "true",
             "{{ nova_whisper_ptt_state_dir }}": "/tmp/state",
             "{{ ansible_facts.user_uid }}": "1000",
@@ -53,6 +55,8 @@ class DeploymentAssetTests(unittest.TestCase):
             "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace.",
         )
         self.assertTrue(config["injection"]["trailing_space"])
+        self.assertEqual(config["injection"]["key_delay_ms"], 8)
+        self.assertEqual(config["injection"]["key_hold_ms"], 8)
         self.assertFalse(config["runtime"]["retain_successful_audio"])
 
     def test_service_has_bounded_startup_retries(self) -> None:

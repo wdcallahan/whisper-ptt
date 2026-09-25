@@ -66,7 +66,14 @@ class InjectionTests(unittest.TestCase):
         command, kwargs = calls[0]
         self.assertEqual(
             command,
-            ["/usr/bin/ydotool", "type", "--file=-", "--escape=0"],
+            [
+                "/usr/bin/ydotool",
+                "type",
+                "--key-delay=8",
+                "--key-hold=8",
+                "--file=-",
+                "--escape=0",
+            ],
         )
         self.assertEqual(kwargs["input"], rb"-literal \n")
         self.assertEqual(result.character_count, 11)

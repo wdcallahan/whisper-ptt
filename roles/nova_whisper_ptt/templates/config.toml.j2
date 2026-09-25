@@ -30,6 +30,8 @@ enabled = true
 ydotool = "/usr/bin/ydotool"
 ascii_only = true
 trailing_space = {{ nova_whisper_ptt_trailing_space | bool | lower }}
+key_delay_ms = {{ nova_whisper_ptt_key_delay_ms }}
+key_hold_ms = {{ nova_whisper_ptt_key_hold_ms }}
 timeout_seconds = 15.0
 
 [focus]

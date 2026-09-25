@@ -12,7 +12,9 @@ PB_28 → KEY_MACRO28 → evdev listener → PipeWire → pywhispercpp → ydoto
 Press begins recording. Holding continues one recording and ignores repeat
 events. Release finalizes the WAV, transcribes it locally, verifies that window
 focus did not change, and inserts the final text once. Accepted transcripts end
-with one space so consecutive push-to-talk utterances remain separate.
+with one space so consecutive push-to-talk utterances remain separate. Text
+injection explicitly uses an 8 ms ydotool key hold and 8 ms inter-key delay;
+both values are managed configuration rather than relying on ydotool defaults.
 
 Every shell command in this repository is intentionally one physical line.
 
