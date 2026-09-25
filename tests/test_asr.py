@@ -76,6 +76,12 @@ class AsrTests(unittest.TestCase):
             "I used SU-Doo to restart the service.": (
                 "I used sudo to restart the service."
             ),
+            "You can use as you do to become root for this one command.": (
+                "You can use sudo to become root for this one command."
+            ),
+            "SU do is not the same thing as SU.": (
+                "sudo is not the same thing as SU."
+            ),
             "I'll ask you to do that tomorrow.": (
                 "I'll ask you to do that tomorrow."
             ),

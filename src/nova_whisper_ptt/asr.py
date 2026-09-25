@@ -57,14 +57,16 @@ _SUDO_VARIANT = re.compile(
     r"s[\s-]*u[\s-]*(?:d[\s-]*o|do{1,2}|du|due)|"
     r"this[\s-]+udo|"
     r"this[\s-]+you[\s-]+do|"
-    r"ask[\s-]+you[\s-]+to[\s-]+do"
+    r"ask[\s-]+you[\s-]+to[\s-]+do|"
+    r"as[\s-]+you[\s-]+do"
     r")\b",
     re.IGNORECASE,
 )
 _SUDO_CONTEXT = re.compile(
     r"\b(?:root|command|package|service|shell|install(?:ed|ing)?|"
     r"dnf|rpm|systemd|systemctl|journalctl|selinux|firewalld|"
-    r"podman|quadlet|ansible|privileg(?:e|ed)|administrator|admin)\b",
+    r"podman|quadlet|ansible|privileg(?:e|ed)|administrator|admin|"
+    r"s[\s-]*u)\b",
     re.IGNORECASE,
 )
 
@@ -91,7 +93,9 @@ def canonicalize_transcript_text(text: str) -> str:
     def canonicalize_sudo(match: re.Match[str]) -> str:
         context_start = max(0, match.start() - 96)
         context_end = min(len(text), match.end() + 96)
-        context = text[context_start:context_end]
+        left_context = text[context_start:match.start()]
+        right_context = text[match.end():context_end]
+        context = left_context + " " + right_context
         if _SUDO_CONTEXT.search(context):
             return "sudo"
         return match.group(0)
