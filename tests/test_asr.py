@@ -39,14 +39,14 @@ class AsrTests(unittest.TestCase):
 
     def test_canonicalizes_recurring_linux_terms_without_guessing_bare_iperf(self) -> None:
         text = (
-            "I used su2 and SU-DU with the system d service, SystemCTL, "
+            "I used su2, sud, SU-DU, and SU due with the system d service, SystemCTL, "
             "JournalCTL, SE Linux, Firewall D, Pipewire, pod man, a quadlet, "
             "ansible, and I-Perf III."
         )
         self.assertEqual(
             canonicalize_transcript_text(text),
             (
-                "I used sudo and sudo with the systemd service, systemctl, "
+                "I used sudo, sudo, sudo, and sudo with the systemd service, systemctl, "
                 "journalctl, SELinux, firewalld, PipeWire, Podman, a Quadlet, "
                 "Ansible, and iperf3."
             ),
