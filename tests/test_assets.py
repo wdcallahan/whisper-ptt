@@ -30,7 +30,7 @@ class DeploymentAssetTests(unittest.TestCase):
             ),
             "{{ nova_whisper_ptt_threads }}": "6",
             "{{ nova_whisper_ptt_initial_prompt | to_json }}": (
-                '"Joule, Pixel, Arcane Sanctum."'
+                '"Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace."'
             ),
             "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "true",
             "{{ nova_whisper_ptt_success_notification | bool | lower }}": "true",
@@ -50,7 +50,7 @@ class DeploymentAssetTests(unittest.TestCase):
         self.assertEqual(config["whisper"]["expected_size_bytes"], 147_964_211)
         self.assertEqual(
             config["whisper"]["initial_prompt"],
-            "Joule, Pixel, Arcane Sanctum.",
+            "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace.",
         )
         self.assertTrue(config["injection"]["trailing_space"])
         self.assertFalse(config["runtime"]["retain_successful_audio"])

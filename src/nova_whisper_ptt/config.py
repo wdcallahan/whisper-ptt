@@ -92,7 +92,7 @@ class WhisperConfig:
     )
     threads: int = 6
     language: str = "en"
-    initial_prompt: str = "Joule, Pixel, Arcane Sanctum."
+    initial_prompt: str = "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace."
 
 
 @dataclass(frozen=True)
@@ -198,7 +198,7 @@ def load_config(path: Path | str | None = None) -> Config:
         initial_prompt=str(
             whisper_data.get(
                 "initial_prompt",
-                "Joule, Pixel, Arcane Sanctum.",
+                "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace.",
             )
         ),
     )

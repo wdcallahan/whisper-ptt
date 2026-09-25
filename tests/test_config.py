@@ -62,7 +62,7 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.whisper.threads, 6)
             self.assertEqual(
                 config.whisper.initial_prompt,
-                "Joule, Pixel, Arcane Sanctum.",
+                "Joule, Pixel, Arcane Sanctum, sudo, systemd, systemctl, journalctl, SELinux, firewalld, PipeWire, Podman, Quadlet, Ansible, iperf3, wicket, river, mace.",
             )
             self.assertTrue(config.injection.trailing_space)
             self.assertTrue(config.focus.require_unchanged)
