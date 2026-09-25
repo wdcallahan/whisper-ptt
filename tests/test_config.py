@@ -73,16 +73,16 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             path = root / "config.toml"
-            path.write_text(
-                CONFIG.format(
-                    rate=16000,
-                    model=root / "model.bin",
-                    state=root / "state",
-                    runtime=root / "runtime",
-                )
-                + "key_delay_ms = -1\n",
-                encoding="utf-8",
+            content = CONFIG.format(
+                rate=16000,
+                model=root / "model.bin",
+                state=root / "state",
+                runtime=root / "runtime",
+            ).replace(
+                "ascii_only = true\n",
+                "ascii_only = true\nkey_delay_ms = -1\n",
             )
+            path.write_text(content, encoding="utf-8")
             with self.assertRaisesRegex(ConfigError, "key_delay_ms cannot be negative"):
                 load_config(path)
 
