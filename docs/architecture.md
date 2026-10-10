@@ -24,7 +24,7 @@ microphone choice, or the three-monkeys emergency device kill switches.
 5. The up event changes state to Transcribing immediately and finalizes WAV.
 6. A preloaded local `base.en` model produces final segments.
 7. An annotation-only result such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`,
-   or `<|nospeech|>` becomes an informational notification and no keystrokes.
+   or `<|nospeech|>` is suppressed silently and never becomes keystrokes.
 8. Text normalization collapses whitespace, maps a small documented set of
    typographic punctuation to ASCII, and appends exactly one inter-utterance
    space.
@@ -41,7 +41,7 @@ microphone choice, or the three-monkeys emergency device kill switches.
 | Starting | None | Model loaded → Idle; failure → process exit |
 | Idle | One press | Recorder started → Recording |
 | Recording | Release; repeats ignored | Release → Transcribing; loss/timeout → Error |
-| Transcribing | New presses rejected | Empty/annotation → Idle plus information; text → Injecting; failure → Error |
+| Transcribing | New presses rejected | Empty/annotation → Idle silently; text → Injecting; failure → Error |
 | Injecting | New presses rejected | Success → Idle; failure/focus change → Error |
 | Error | New press clears and retries | Valid press → Recording |
 | Stopped | None | User service restart |
@@ -115,10 +115,15 @@ Nova-owned focus broker is a possible later hardening step, not a prerequisite
 for the first MACE proof.
 
 Every Error transition raises an eight-second attention notification. That
-includes a focus mismatch before injection and the post-injection audit warning
-that already-emitted text may have crossed windows. Annotation-only model
-results are not errors: they return to Idle, raise a shorter informational
-notification naming the suppressed annotation, and inject nothing.
+includes a focus mismatch before injection, a disconnected input device, and
+the post-injection audit warning that already-emitted text may have crossed
+windows. A rejected press while the controller is busy also notifies.
+
+Routine Recording and Transcribing transitions never notify. By default,
+successful insertion, empty transcripts, annotation-only model results,
+and too-short taps return to Idle silently; the corresponding text-free metrics
+remain available. Explicitly enabling `feedback.success_notification` restores
+Idle completion notifications, but the default is `false`.
 
 ## Failure artifacts
 
