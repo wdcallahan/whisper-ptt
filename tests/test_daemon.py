@@ -153,6 +153,10 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue(controller.release())
             self._wait_for(controller, State.IDLE)
             self.assertEqual(injector.texts, ["hello world "])
+            self.assertIn(
+                ("Nova Whisper is busy", "Ignored a new press while recording."),
+                publisher.notices,
+            )
             self.assertEqual(
                 [state for state, _ in publisher.states],
                 [
@@ -197,7 +201,7 @@ class ControllerTests(unittest.TestCase):
                 ["I used sudo with systemd and SELinux. "],
             )
 
-    def test_annotation_becomes_notification_not_keystrokes(self) -> None:
+    def test_annotation_is_silent_and_never_injected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             publisher = FakePublisher()
@@ -224,18 +228,68 @@ class ControllerTests(unittest.TestCase):
                     "Whisper reported [BLANK_AUDIO]; inserted nothing.",
                 ),
             )
-            self.assertEqual(
-                publisher.notices[-1],
-                (
-                    "Nova Whisper: non-speech",
-                    "Whisper reported [BLANK_AUDIO]; inserted nothing.",
-                ),
-            )
+            self.assertEqual(publisher.notices, [])
             metrics = (root / "state" / "metrics.jsonl").read_text(
                 encoding="utf-8"
             )
             self.assertIn('"outcome": "annotation"', metrics)
             self.assertIn('"character_count": 0', metrics)
+
+    def test_short_tap_is_silent_and_records_metric(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = replace(
+                make_config(root), audio=AudioConfig(minimum_duration_ms=700)
+            )
+            publisher = FakePublisher()
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                config, FakeRecorder(), FakeTranscriber(), injector,
+                FakeFocus(), publisher, timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            controller.release()
+            self._wait_for(controller, State.IDLE)
+            self.assertEqual(injector.texts, [])
+            self.assertEqual(publisher.notices, [])
+            metrics = (root / "state" / "metrics.jsonl").read_text(encoding="utf-8")
+            self.assertIn('"outcome": "too-short"', metrics)
+
+    def test_empty_transcript_is_silent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            publisher = FakePublisher()
+            injector = FakeInjector()
+            controller = PushToTalkController(
+                make_config(root), FakeRecorder(), FakeTranscriber(""),
+                injector, FakeFocus(), publisher, timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.press()
+            controller.release()
+            self._wait_for(controller, State.IDLE)
+            self.assertEqual(injector.texts, [])
+            self.assertEqual(publisher.notices, [])
+            metrics = (root / "state" / "metrics.jsonl").read_text(encoding="utf-8")
+            self.assertIn('"outcome": "empty"', metrics)
+
+    def test_device_loss_enters_error_and_recovery_restores_idle(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            publisher = FakePublisher()
+            controller = PushToTalkController(
+                make_config(root), FakeRecorder(), FakeTranscriber(),
+                FakeInjector(), FakeFocus(), publisher, timer_factory=FakeTimer,
+            )
+            controller.ready()
+            controller.device_lost("input device unavailable")
+            self.assertEqual(controller.state, State.ERROR)
+            self.assertEqual(publisher.states[-1], (
+                State.ERROR, "input device unavailable"
+            ))
+            controller.device_restored("/dev/input/by-id/fake")
+            self.assertEqual(controller.state, State.IDLE)
 
     def test_focus_change_preserves_audio_and_transcript_without_injection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

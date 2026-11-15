@@ -11,11 +11,11 @@ from nova_whisper_ptt.state import State, StatePublisher
 
 
 class StateTests(unittest.TestCase):
-    def test_state_is_atomic_and_notifications_replace_one_another(self) -> None:
+    def test_state_is_atomic_and_routine_transitions_are_silent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             calls = []
-            notification_ids = iter((b"41\n", b"41\n", b"41\n"))
+            notification_ids = iter((b"41\n",))
 
             def runner(command, **kwargs):
                 calls.append((command, kwargs))
@@ -38,12 +38,35 @@ class StateTests(unittest.TestCase):
             payload = json.loads(publisher.state_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["state"], "idle")
             self.assertEqual(payload["detail"], "third")
+            self.assertEqual(calls, [])
+            publisher.publish(State.ERROR, "input device disappeared")
+            self.assertEqual(len(calls), 1)
+            self.assertIn("Nova Whisper: attention required", calls[0][0])
             self.assertNotIn("--replace-id=41", calls[0][0])
-            self.assertIn("--replace-id=41", calls[1][0])
-            self.assertIn("--replace-id=41", calls[2][0])
             self.assertFalse(
                 publisher.state_path.with_suffix(".json.tmp").exists()
             )
+
+    def test_success_notification_requires_explicit_opt_in(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            calls = []
+
+            def runner(command, **kwargs):
+                calls.append(command)
+                return subprocess.CompletedProcess(command, 0, b"48\n", b"")
+
+            publisher = StatePublisher(
+                RuntimeConfig(state_dir=root / "state", runtime_dir=root / "runtime"),
+                FeedbackConfig(success_notification=True),
+                runner=runner,
+            )
+            publisher.publish(State.RECORDING, "recording")
+            publisher.publish(State.TRANSCRIBING, "transcribing")
+            self.assertEqual(calls, [])
+            publisher.publish(State.IDLE, "Inserted 12 characters.")
+            self.assertEqual(len(calls), 1)
+            self.assertIn("Nova Whisper: ready", calls[0])
 
     def test_error_notification_requests_attention_without_claiming_safety(
         self,

@@ -54,7 +54,7 @@ accepted until the same desktop runbook passes there.
 | Lost release | Device loss aborts capture; a 180-second ceiling stops an orphaned recording. |
 | Overlapping inference | A press while busy is rejected visibly. |
 | Focus changes | Focus is checked before each bounded 8-character injection chunk. A mismatch stops before the next chunk, limiting any post-switch spill to the chunk already in progress. A final check still detects the end-of-injection race; emitted characters cannot be recalled. |
-| Empty/short audio | Nothing is injected. A tap, empty result, or annotation-only result becomes a desktop notification. |
+| Empty/short audio | Nothing is injected. Short taps, empty results, and annotation-only results are silent and recorded in text-free metrics. |
 | Whisper annotations | A whole-result subtitle/control cue such as `[BLANK_AUDIO]`, `[Music]`, `(silence)`, or `<\|nospeech\|>` is classified as non-speech, shown in a notification, and never typed. Mixed ordinary speech is not silently rewritten. |
 | Consecutive utterances | Normalization appends exactly one trailing ASCII space so sentences do not collide. |
 | Dictated technical terms | A narrow post-transcription cleanup canonicalizes recurring Linux spellings such as `sudo`, `systemd`, `SELinux`, and `PipeWire`. Ambiguous bare `iperf` is left unchanged; explicit forms such as “I-Perf III” become `iperf3`. |
@@ -219,10 +219,16 @@ Privacy-preserving timing history:
 ~/.local/state/nova-whisper-ptt/metrics.jsonl
 ```
 
-Runtime failures, including focus changes before or after injection, enter the
-Error state and raise an eight-second attention notification. Non-speech
-annotations and too-short taps return to Idle and raise a shorter informational
-notification instead.
+Runtime failures, including focus changes before or after injection and
+disconnected input devices, enter the Error state and raise an eight-second
+attention notification. A press rejected while Whisper is busy also notifies.
+Routine recording, transcription, successful insertion, silence, annotations,
+and too-short taps are silent. All state transitions remain visible through
+the runtime state file, and successful timing metrics are still recorded.
+
+The `feedback.success_notification` setting defaults to `false`; setting
+`nova_whisper_ptt_success_notification=true` in Ansible explicitly opts into
+completion notices. The default is intentionally exception-only.
 
 ## Immediate rollback
 

@@ -185,10 +185,6 @@ class PushToTalkController:
                 self._complete_success(
                     utterance_dir, "Utterance was too short; inserted nothing."
                 )
-                self.publisher.notice(
-                    "Nova Whisper: no speech",
-                    "The Whisper-key tap was too short; nothing was inserted.",
-                )
                 return
 
             transcript = self.transcriber.transcribe(audio_path)
@@ -207,10 +203,6 @@ class PushToTalkController:
                     f"Whisper reported {annotation}; inserted nothing."
                 )
                 self._complete_success(utterance_dir, detail)
-                self.publisher.notice(
-                    "Nova Whisper: non-speech",
-                    detail,
-                )
                 return
 
             canonicalized = canonicalize_transcript_text(transcript.text)
@@ -224,10 +216,6 @@ class PushToTalkController:
                 )
                 self._complete_success(
                     utterance_dir, "No speech recognized; inserted nothing."
-                )
-                self.publisher.notice(
-                    "Nova Whisper: no speech",
-                    "No speech was recognized; nothing was inserted.",
                 )
                 return
 

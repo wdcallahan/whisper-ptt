@@ -117,7 +117,7 @@ class FocusConfig:
 class FeedbackConfig:
     notifications: bool = True
     notify_send: str = "/usr/bin/notify-send"
-    success_notification: bool = True
+    success_notification: bool = False
 
 
 @dataclass(frozen=True)
@@ -222,7 +222,7 @@ def load_config(path: Path | str | None = None) -> Config:
         notifications=_boolean(feedback_data, "notifications", True),
         notify_send=str(feedback_data.get("notify_send", "/usr/bin/notify-send")),
         success_notification=_boolean(
-            feedback_data, "success_notification", True
+            feedback_data, "success_notification", False
         ),
     )
     runtime_config = RuntimeConfig(

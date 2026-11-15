@@ -68,6 +68,7 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.injection.key_delay_ms, 8)
             self.assertEqual(config.injection.key_hold_ms, 8)
             self.assertTrue(config.focus.require_unchanged)
+            self.assertFalse(config.feedback.success_notification)
 
     def test_rejects_negative_injection_timing(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

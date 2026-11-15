@@ -35,7 +35,7 @@ class DeploymentAssetTests(unittest.TestCase):
             "{{ nova_whisper_ptt_trailing_space | bool | lower }}": "true",
             "{{ nova_whisper_ptt_key_delay_ms }}": "8",
             "{{ nova_whisper_ptt_key_hold_ms }}": "8",
-            "{{ nova_whisper_ptt_success_notification | bool | lower }}": "true",
+            "{{ nova_whisper_ptt_success_notification | bool | lower }}": "false",
             "{{ nova_whisper_ptt_state_dir }}": "/tmp/state",
             "{{ ansible_facts.user_uid }}": "1000",
             "{{ nova_whisper_ptt_retain_successful_audio | bool | lower }}": "false",
@@ -58,6 +58,7 @@ class DeploymentAssetTests(unittest.TestCase):
         self.assertEqual(config["injection"]["key_delay_ms"], 8)
         self.assertEqual(config["injection"]["key_hold_ms"], 8)
         self.assertFalse(config["runtime"]["retain_successful_audio"])
+        self.assertFalse(config["feedback"]["success_notification"])
 
     def test_service_has_bounded_startup_retries(self) -> None:
         unit = (

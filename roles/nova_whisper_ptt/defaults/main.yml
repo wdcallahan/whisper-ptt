@@ -31,7 +31,7 @@ nova_whisper_ptt_trailing_space: true
 nova_whisper_ptt_key_delay_ms: 8
 nova_whisper_ptt_key_hold_ms: 8
 nova_whisper_ptt_retain_successful_audio: false
-nova_whisper_ptt_success_notification: true
+nova_whisper_ptt_success_notification: false
 
 nova_whisper_ptt_prepare_model: false
 nova_whisper_ptt_enable_service: false

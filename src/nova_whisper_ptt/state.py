@@ -75,21 +75,7 @@ class StatePublisher:
     def _notify_state(
         self, snapshot: StateSnapshot, previous: StateSnapshot | None
     ) -> None:
-        if snapshot.state == State.RECORDING:
-            self._notify(
-                "Nova Whisper: recording",
-                "Release Whisper to transcribe.",
-                "audio-input-microphone-symbolic",
-                0,
-            )
-        elif snapshot.state == State.TRANSCRIBING:
-            self._notify(
-                "Nova Whisper: transcribing",
-                "The focused window must remain unchanged.",
-                "system-run-symbolic",
-                0,
-            )
-        elif snapshot.state == State.ERROR:
+        if snapshot.state == State.ERROR:
             self._notify(
                 "Nova Whisper: attention required",
                 snapshot.detail,
